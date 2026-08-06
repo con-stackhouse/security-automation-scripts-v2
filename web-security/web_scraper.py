@@ -37,6 +37,7 @@ import requests                       # Python library for url requests
 from bs4 import BeautifulSoup         # 3rd party BeautifulSoup library
 from PIL import Image                 # 3rd party Python Image library
 from io import BytesIO
+from urllib.parse import urljoin
 
 URL = 'https://casl.website'
 saveImg = os.path.join(os.getcwd(), 'images')
@@ -68,8 +69,7 @@ if linkTags:
         if not newLink:
             continue
 
-        if 'http' not in newLink:
-            newLink = URL + newLink
+        newLink = urljoin(URL, newLink)
         pageLinks.add(newLink)
 
 imageTags = soup.findAll('img')
@@ -85,8 +85,7 @@ if imageTags:
 
             # display the alternative text associated with the image
             print("Alt text: ", eachImage.get('alt', 'no alt text provided'))
-            if imgURL[0:4] != 'http':   # if URL path is relative
-                imgURL = URL + imgURL    # prepending base url
+            imgURL = urljoin(URL, imgURL)  # resolve relative/protocol-relative URLs against the base page
             response = requests.get(imgURL, timeout=REQUEST_TIMEOUT)  # Get image from the URL
             imageName = os.path.basename(imgURL)
             img = Image.open(BytesIO(response.content))  # Download the image
