@@ -18,6 +18,7 @@ Security Application:
 Usage:
     python3 system_info_logger.py
     (Prompts for investigator name and target folder)
+    python3 system_info_logger.py --investigator "Jane Doe" --organization "Class Code" --path /some/dir
 
 Requirements:
     - Python 3.x
@@ -29,12 +30,20 @@ Output:
     - Complete system profile (OS, hardware, network)
     - SHA-256 file catalog with timestamps
     - File count summary
+    Also writes system_info_logger.txt.sha256, a SHA-256 hash of the
+    completed log file, in `<hash>  <filename>` format.
 
 Note:
-    Output log file serves as forensic documentation for investigations
+    Output log file serves as forensic documentation for investigations.
+    The companion .sha256 file lets a later reviewer verify the log
+    wasn't altered after generation - this is tamper-evidence, not a
+    cryptographic signature: anyone with write access to both files
+    could regenerate a matching hash, so it doesn't provide
+    non-repudiation on its own.
 
 """
 
+import argparse
 import os
 import re
 import logging
@@ -67,7 +76,7 @@ def getSystemInfo():
         return False
 
 
-def main():
+def main(investigator=None, organization=None, targetFolder=None):
 
     # Remove any old logging script
     if os.path.isfile("system_info_logger.txt"):
@@ -81,8 +90,8 @@ def main():
     )
     logging.info("Script Start\n")
 
-    investigator = input("Investigator Name:  ")
-    organization = input("Class Code  :       ")
+    investigator = investigator if investigator else input("Investigator Name:  ")
+    organization = organization if organization else input("Class Code  :       ")
 
     logging.info("Investigator Name:  " + investigator)
     logging.info("Class Code:  " + organization)
@@ -97,7 +106,7 @@ def main():
             logging.info(key + ": " + str(value))
         logging.info("\n")
 
-        targetFolder = input("Enter a specified folder: ")
+        targetFolder = targetFolder if targetFolder else input("Enter a specified folder: ")
 
         for currentRoot, dirList, fileList in os.walk(targetFolder):
             for nextFile in fileList:
@@ -140,8 +149,32 @@ def main():
 
     logging.info("Files Processed: " + str(filesProcessed))
 
+    # Flush and close the log handlers before hashing so the hash covers
+    # everything that was written, not a partially-buffered snapshot
+    logging.shutdown()
+
+    logHashObj = hashlib.sha256()
+    with open("system_info_logger.txt", "rb") as logFile:
+        for block in iter(lambda: logFile.read(65536), b""):
+            logHashObj.update(block)
+    logHexDigest = logHashObj.hexdigest()
+
+    with open("system_info_logger.txt.sha256", "w") as hashFile:
+        hashFile.write(logHexDigest + "  system_info_logger.txt\n")
+
+    return logHexDigest
+
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Profile this system and hash-catalog a target folder for forensic documentation."
+    )
+    parser.add_argument("--investigator", help="Investigator name (prompts interactively if omitted)")
+    parser.add_argument("--organization", help="Class/organization code (prompts interactively if omitted)")
+    parser.add_argument("--path", help="Target folder to catalog (prompts interactively if omitted)")
+    args = parser.parse_args()
+
     print("\n\nSystem Information Forensic Logger\n")
-    main()
+    logHexDigest = main(args.investigator, args.organization, args.path)
+    print("\nLog SHA-256:", logHexDigest)
     print("\nScript End")
