@@ -57,6 +57,7 @@ args = parser.parse_args()
 URL = args.url
 saveImg = args.output if args.output else os.path.join(os.getcwd(), "images")
 REQUEST_TIMEOUT = 10  # seconds
+MAX_IMAGE_SIZE = 20 * 1024 * 1024  # 20 MB - bound memory use from a large/malicious response
 
 os.makedirs(saveImg, exist_ok=True)
 
@@ -103,11 +104,30 @@ if imageTags:
             imgURL = urljoin(
                 URL, imgURL
             )  # resolve relative/protocol-relative URLs against the base page
-            response = requests.get(
-                imgURL, timeout=REQUEST_TIMEOUT
-            )  # Get image from the URL
+
+            # Streamed so MAX_IMAGE_SIZE can be enforced before the whole
+            # body is buffered into memory
+            response = requests.get(imgURL, timeout=REQUEST_TIMEOUT, stream=True)
+
+            declaredSize = response.headers.get("Content-Length")
+            if declaredSize and int(declaredSize) > MAX_IMAGE_SIZE:
+                raise ValueError(
+                    f"declared size {declaredSize} bytes exceeds "
+                    f"{MAX_IMAGE_SIZE}-byte limit"
+                )
+
+            # Content-Length is advisory and can be absent or wrong, so also
+            # enforce the cap while actually reading the response body
+            imageBytes = bytearray()
+            for chunk in response.iter_content(chunk_size=65536):
+                imageBytes += chunk
+                if len(imageBytes) > MAX_IMAGE_SIZE:
+                    raise ValueError(
+                        f"response exceeded {MAX_IMAGE_SIZE}-byte limit while downloading"
+                    )
+
             imageName = os.path.basename(imgURL)
-            img = Image.open(BytesIO(response.content))  # Download the image
+            img = Image.open(BytesIO(imageBytes))  # Download the image
             img.save(os.path.join(saveImg, imageName))  # Save the image
 
             print("Downloaded " + imageName)
