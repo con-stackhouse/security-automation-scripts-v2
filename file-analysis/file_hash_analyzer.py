@@ -1,8 +1,13 @@
 """
 File Hash Analyzer
+
+Usage:
+    python3 file_hash_analyzer.py --path /some/dir
+    python3 file_hash_analyzer.py            (prompts for a directory)
 """
 
 # Python Standard Libaries
+import argparse
 import os
 import hashlib
 import time
@@ -10,7 +15,13 @@ import time
 # Python 3rd Party Libraries
 from prettytable import PrettyTable  # pip install prettytable
 
-targetFolder = input("Enter Target Folder: ")
+parser = argparse.ArgumentParser(
+    description="Recursively catalog files with SHA-256 hashes and metadata."
+)
+parser.add_argument("--path", help="Directory to scan (prompts interactively if omitted)")
+args = parser.parse_args()
+
+targetFolder = args.path if args.path else input("Enter Target Folder: ")
 
 # Start of the Script
 
