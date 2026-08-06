@@ -1,4 +1,4 @@
-'''
+"""
 Memory Dump Word Frequency Analyzer
 Author: Connor Stackhouse
 Course: Cyber Operations Engineering - University of Arizona
@@ -25,7 +25,7 @@ Requirements:
 Output:
     Console counts for the keywords "kernel", "encrypt", and
     "fairwitness" found in the memory dump
-'''
+"""
 
 import re
 
@@ -57,38 +57,44 @@ def countMatches(pattern, buffer, isFinalChunk, marginSize, counts, transform=No
         if not isFinalChunk and match.end() > limit:
             carryStart = min(carryStart, match.start())
             continue
-        key = match.group().decode('utf-8')
+        key = match.group().decode("utf-8")
         if transform:
             key = transform(key)
         counts[key] = counts.get(key, 0) + 1
     return carryStart
 
 
-def processFileInChunks(filePath, pattern, chunkSize, marginSize=OVERLAP_SIZE, transform=None):
+def processFileInChunks(
+    filePath, pattern, chunkSize, marginSize=OVERLAP_SIZE, transform=None
+):
     counts = {}
-    carry = b''
-    with open(filePath, 'rb') as target:
+    carry = b""
+    with open(filePath, "rb") as target:
         while True:
             raw = target.read(chunkSize)
             buffer = carry + raw
             isFinalChunk = not raw
-            carryStart = countMatches(pattern, buffer, isFinalChunk, marginSize, counts, transform=transform)
+            carryStart = countMatches(
+                pattern, buffer, isFinalChunk, marginSize, counts, transform=transform
+            )
             if isFinalChunk:
                 break
             carry = buffer[carryStart:]
     return counts
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Memory Forensics Analyzer")
 
-    wordCount = processFileInChunks("mem.raw", WORDS_PATTERN, CHUNK_SIZE, transform=str.lower)
+    wordCount = processFileInChunks(
+        "mem.raw", WORDS_PATTERN, CHUNK_SIZE, transform=str.lower
+    )
     print("\nFile Processed:", "mem.raw")
 
     kernelCount = wordCount.get("kernel", 0)
     encryptCount = wordCount.get("encrypt", 0)
     fairwitnessCount = wordCount.get("fairwitness", 0)
 
-    print("kernelCount: ",      kernelCount)
-    print("encryptCount:",      encryptCount)
+    print("kernelCount: ", kernelCount)
+    print("encryptCount:", encryptCount)
     print("fairwitnessCount: ", fairwitnessCount)

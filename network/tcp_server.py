@@ -2,7 +2,7 @@ import socket
 import sys
 import hashlib
 
-'''
+"""
 
 TCP Server with MD5 Hash Response
 Author: Connor Stackhouse
@@ -38,90 +38,58 @@ Note:
     authentication requires a keyed MAC (e.g. HMAC-SHA256) or a
     signature scheme.
 
-'''
+"""
 
 
 print("Server Starting up...\n")
 
 
-
 try:
-
     serverSocket = socket.socket()  # Create socket for listening
 
     localHost = socket.gethostname()  # Get local host address
 
-    localPort = 5555  # Specify a local port 
-
-
+    localPort = 5555  # Specify a local port
 
     serverSocket.bind((localHost, localPort))  # Bind socket to localHost
 
     serverSocket.listen(1)  # Listen for connections
 
+    print("Waiting for connection request...\n")
 
-
-    print('Waiting for connection request...\n')
-
-    conn, client = serverSocket.accept()  
-
-
+    conn, client = serverSocket.accept()
 
     print("Connection received from client: ", client, "\n")
 
-
-
     while True:
-
-        buffer = conn.recv(2048)  
+        buffer = conn.recv(2048)
 
         if not buffer:
-
             break
 
-        
-
-        print(buffer)  
-
-
-
-        
+        print(buffer)
 
         md5Obj = hashlib.md5()
 
-        md5Obj.update(buffer)  
+        md5Obj.update(buffer)
 
         digest = md5Obj.hexdigest()
 
-        digestBytes = bytes(digest.encode('utf8'))
-
-
-
-        
+        digestBytes = bytes(digest.encode("utf8"))
 
         response = b"Received message. MD5: " + digestBytes
 
         print(response)
 
-        conn.sendall(response)        
+        conn.sendall(response)
 
-
-
-        if b'exit' in buffer.lower():
-
+        if b"exit" in buffer.lower():
             print("Server terminated by user")
 
             break
 
-
-
     conn.close()
 
 
-
 except Exception as err:
-
     sys.exit(str(err))
-
-
-

@@ -1,4 +1,4 @@
-'''
+"""
 Rainbow Table Generator
 Author: Connor Stackhouse
 Course: Cyber Operations Engineering - University of Arizona
@@ -34,7 +34,8 @@ Note:
     rainbow table. Data is persisted as JSON rather than a pickle
     file to avoid the arbitrary-code-execution risk associated with
     unpickling data, even from a locally, self-generated file.
-'''
+"""
+
 import itertools
 import hashlib
 import json
@@ -43,13 +44,13 @@ from prettytable import PrettyTable
 rainbowTable = {}
 
 print("Create Simple Rainbow Table")
-for variations in range(4,8):
+for variations in range(4, 8):
     for pwTuple in itertools.product("abc123&", repeat=variations):
         pw = ""
         md5Hash = hashlib.md5()
         for eachChr in pwTuple:
-            pw = pw+"".join(eachChr)
-        pwBytes = bytes(pw, 'ascii')
+            pw = pw + "".join(eachChr)
+        pwBytes = bytes(pw, "ascii")
         md5Hash.update(pwBytes)
         md5Digest = md5Hash.hexdigest()
         rainbowTable[md5Digest] = pw
@@ -57,13 +58,13 @@ for variations in range(4,8):
 print("Rainbow Size: ", len(rainbowTable), "\n")
 
 # Open the destination file (write text) and serialize rainbowTable as JSON
-jsonFileWrite = open('rainbow.db', 'w')
+jsonFileWrite = open("rainbow.db", "w")
 json.dump(rainbowTable, jsonFileWrite)
 jsonFileWrite.close()
 
 
 # Open the JSON file (read text)
-jsonFileRead = open('rainbow.db', 'r')
+jsonFileRead = open("rainbow.db", "r")
 
 # LOAD the serialized data
 print("\nLoading The Rainbow Table\n")
@@ -72,18 +73,18 @@ jsonFileRead.close()
 
 table = PrettyTable(["MD5 HASH VALUE", "PASSWORD"])
 
-# Convert the dictionary to a list 
+# Convert the dictionary to a list
 entryList = list(retrievedRainbowTable.items())
 
 # Slice the list first 5 last 5 entries
 firstFive = entryList[:5]
-lastFive  = entryList[-5:]
+lastFive = entryList[-5:]
 
 for key, value in firstFive:
     table.add_row([key, value])
 for key, value in lastFive:
     table.add_row([key, value])
-table.align = 'l'
+table.align = "l"
 
 print(table)
 print("\nScript End")

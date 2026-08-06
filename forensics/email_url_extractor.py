@@ -1,4 +1,4 @@
-'''
+"""
 Email & URL Extractor from Memory Dumps
 Author: Connor Stackhouse
 Course: Cyber Operations Engineering - University of Arizona
@@ -26,7 +26,7 @@ Requirements:
 Output:
     - Sorted tables of email addresses by frequency
     - Sorted tables of URLs by frequency
-'''
+"""
 
 import os
 import re
@@ -35,9 +35,9 @@ from prettytable import PrettyTable
 
 # Regular expression patterns (raw byte strings so backslash escapes
 # are passed through to the regex engine, not interpreted by Python)
-ePatt = re.compile(rb'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}')
-uPatt = re.compile(rb'\w+:\/\/[\w@][\w.:@]+\/?[\w.\.?=%&=\-@$,]*')
-wPatt = re.compile(rb'[a-zA-Z]{5,15}')
+ePatt = re.compile(rb"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}")
+uPatt = re.compile(rb"\w+:\/\/[\w@][\w.:@]+\/?[\w.\.?=%&=\-@$,]*")
+wPatt = re.compile(rb"[a-zA-Z]{5,15}")
 
 # Minimum number of trailing bytes always carried into the next chunk,
 # regardless of whether a match was found there. Needed because a partial
@@ -74,23 +74,29 @@ def processFile(filePath, chunkSize, marginSize=OVERLAP_SIZE):
     wordDict = {}
     # Each pattern can have its own match straddling the chunk boundary,
     # so each needs its own independent carry-forward buffer.
-    emailCarry = b''
-    urlCarry = b''
-    wordCarry = b''
+    emailCarry = b""
+    urlCarry = b""
+    wordCarry = b""
 
-    with open(filePath, 'rb') as binaryFile:
+    with open(filePath, "rb") as binaryFile:
         while True:
             raw = binaryFile.read(chunkSize)
             isFinalChunk = not raw
 
             emailBuffer = emailCarry + raw
-            emailCarryStart = countMatches(ePatt, emailBuffer, isFinalChunk, marginSize, emailDict)
+            emailCarryStart = countMatches(
+                ePatt, emailBuffer, isFinalChunk, marginSize, emailDict
+            )
 
             urlBuffer = urlCarry + raw
-            urlCarryStart = countMatches(uPatt, urlBuffer, isFinalChunk, marginSize, urlCount)
+            urlCarryStart = countMatches(
+                uPatt, urlBuffer, isFinalChunk, marginSize, urlCount
+            )
 
             wordBuffer = wordCarry + raw
-            wordCarryStart = countMatches(wPatt, wordBuffer, isFinalChunk, marginSize, wordDict)
+            wordCarryStart = countMatches(
+                wPatt, wordBuffer, isFinalChunk, marginSize, wordDict
+            )
 
             if isFinalChunk:
                 break
@@ -102,7 +108,7 @@ def processFile(filePath, chunkSize, marginSize=OVERLAP_SIZE):
     return emailDict, urlCount, wordDict
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("\nExtract e-mails and urls from the memory dump provided\n")
 
     try:
@@ -120,14 +126,14 @@ if __name__ == '__main__':
             emailTable = PrettyTable(["OCCURS", "EMAIL"])
             for key, value in emailDict.items():
                 emailTable.add_row([value, key])
-            emailTable.align = 'l'
+            emailTable.align = "l"
             print("\nEmails Found:")
             print(emailTable.get_string(sortby="OCCURS", reversesort=True))
 
             urlTable = PrettyTable(["OCCURS", "URL"])
             for key, value in urlCount.items():
                 urlTable.add_row([value, key])
-            urlTable.align = 'l'
+            urlTable.align = "l"
             print("\nURLs Found:")
             print(urlTable.get_string(sortby="OCCURS", reversesort=True))
 

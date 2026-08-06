@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-'''
+"""
 File Hash Duplicate Detector
 Author: Connor Stackhouse
 Course: Cyber Operations Engineering - University of Arizona
@@ -34,7 +34,7 @@ Note:
     collision is very unlikely in a non-adversarial dedup scan,
     SHA-256 costs little extra and avoids relying on a broken
     primitive.
-'''
+"""
 
 import os
 import hashlib
@@ -46,7 +46,6 @@ fileList = []
 fileHashes = {}
 
 for root, dirs, files in os.walk(directory):
-
     # Walk the path from top to bottom.
     # For each file obtain the filename
     for fileName in files:
@@ -57,9 +56,9 @@ for root, dirs, files in os.walk(directory):
 for filePath in fileList:
     hashObj = hashlib.sha256()
     try:
-        with open(filePath, 'rb') as file:
+        with open(filePath, "rb") as file:
             # Read in chunks so large files don't need to fit in memory
-            for block in iter(lambda: file.read(65536), b''):
+            for block in iter(lambda: file.read(65536), b""):
                 hashObj.update(block)
     except OSError as err:
         print("Could not read", filePath, "-", err)

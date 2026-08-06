@@ -1,4 +1,4 @@
-'''
+"""
 Network Packet Sniffer & Analyzer
 Author: Connor Stackhouse
 Course: Cyber Operations Engineering - University of Arizona
@@ -33,9 +33,9 @@ Output:
 
 Security Note:
     Only use on networks you own or have explicit permission to monitor.
-'''
+"""
 
-'''
+"""
 BLACK HAT PYTHON
 SNIFFER EXPERIMENT WITH MODIFICATIONS
 
@@ -68,7 +68,7 @@ Character  Byte order              Size        Alignment
 <          little-endian           standard    none
 >          big-endian              standard    none
 !          network (= big-endian)  standard    none
-'''
+"""
 
 import socket
 import ipaddress
@@ -87,7 +87,7 @@ PACKET_LIMIT = 10000
 class IP:
     def __init__(self, buff=None):
 
-        header = struct.unpack('<BBHHHBBH4s4s', buff)
+        header = struct.unpack("<BBHHHBBH4s4s", buff)
         self.ver = header[0] >> 4
         self.ihl = header[0] & 0xF
 
@@ -124,12 +124,11 @@ def main():
 
     try:
         for i in range(PACKET_LIMIT):
+            packet = sniffer.recvfrom(65565)  # Wait for Packet
+            basePacket = packet[0]  # Extract Packet Data from tuple
+            pckHeader = basePacket[0:20]  # Extract the packet header
 
-            packet = sniffer.recvfrom(65565)   # Wait for Packet
-            basePacket = packet[0]             # Extract Packet Data from tuple
-            pckHeader = basePacket[0:20]       # Extract the packet header
-
-            ipOBJ = IP(pckHeader)              # Create the IP Object
+            ipOBJ = IP(pckHeader)  # Create the IP Object
 
             # Lookup the protocol name
             protocolName = ipOBJ.protocol_map.get(ipOBJ.protocol_num, "Unknown")
@@ -152,5 +151,5 @@ def main():
     print(tbl.get_string(sortby="Occurs", reversesort=True))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

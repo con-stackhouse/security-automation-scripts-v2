@@ -1,4 +1,4 @@
-'''
+"""
 Memory Dump String Frequency Analyzer
 Author: Connor Stackhouse
 Course: Cyber Operations Engineering - University of Arizona
@@ -25,7 +25,7 @@ Requirements:
 
 Output:
     Top 50 most frequent text strings found in memory
-'''
+"""
 
 import re
 import os
@@ -44,7 +44,7 @@ CHUNK_SIZE = 1024
 OVERLAP_SIZE = 20
 
 # Regular expression for continuous alpha string pattern
-wPatt = re.compile(b'[a-zA-Z]{5,15}')
+wPatt = re.compile(b"[a-zA-Z]{5,15}")
 
 
 def countMatches(pattern, buffer, isFinalChunk, marginSize, counts):
@@ -69,8 +69,8 @@ def countMatches(pattern, buffer, isFinalChunk, marginSize, counts):
 
 def processFileInChunks(filePath, pattern, chunkSize, marginSize=OVERLAP_SIZE):
     counts = {}
-    carry = b''
-    with open(filePath, 'rb') as binaryFile:
+    carry = b""
+    with open(filePath, "rb") as binaryFile:
         while True:
             raw = binaryFile.read(chunkSize)
             buffer = carry + raw
@@ -82,19 +82,19 @@ def processFileInChunks(filePath, pattern, chunkSize, marginSize=OVERLAP_SIZE):
     return counts
 
 
-if __name__ == '__main__':
-    if not os.path.isfile('mem.raw'):
+if __name__ == "__main__":
+    if not os.path.isfile("mem.raw"):
         sys.exit("mem.raw not found in current directory")
 
-    wordCount = processFileInChunks('mem.raw', wPatt, CHUNK_SIZE)
+    wordCount = processFileInChunks("mem.raw", wPatt, CHUNK_SIZE)
 
-    print("\nFile Processed:", 'mem.raw')
+    print("\nFile Processed:", "mem.raw")
 
     # Display results
     wordTable = PrettyTable(["OCCURS", "WORD"])
     for key, value in wordCount.items():
         wordTable.add_row([value, key])
-    wordTable.align = 'l'
+    wordTable.align = "l"
     wordTable.sortby = "OCCURS"
     wordTable.reversesort = True
 

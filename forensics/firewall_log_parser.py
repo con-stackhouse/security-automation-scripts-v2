@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-'''
+"""
 Firewall Log Parser & Worm Detector
 Author: Connor Stackhouse
 Course: Cyber Operations Engineering - University of Arizona
@@ -26,7 +26,7 @@ Requirements:
 
 Output:
     Sorted list of unique worm names detected in firewall logs
-'''
+"""
 
 import sys
 
@@ -35,7 +35,7 @@ LOG_FILE = "redhat.txt"
 uniqueWorms = set()
 
 try:
-    with open(LOG_FILE, 'r') as logFile:
+    with open(LOG_FILE, "r") as logFile:
         for eachLine in logFile:
             fields = eachLine.split()
 
@@ -53,16 +53,3 @@ sortedWorms = sorted(uniqueWorms)
 # print each instance
 for worm in sortedWorms:
     print(worm)
-
-        
-
-    
-
-
-
-
-
-        
-
-        
-
