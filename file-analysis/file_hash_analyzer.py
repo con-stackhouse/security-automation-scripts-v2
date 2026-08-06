@@ -1,6 +1,6 @@
-'''
-WK-3 STARTER SCRIPT
-'''
+"""
+File Hash Analyzer
+"""
 
 # Python Standard Libaries
 import os
@@ -8,7 +8,7 @@ import hashlib
 import time
 
 # Python 3rd Party Libraries
-from prettytable import PrettyTable     # pip install prettytable
+from prettytable import PrettyTable  # pip install prettytable
 
 targetFolder = input("Enter Target Folder: ")
 
@@ -16,12 +16,20 @@ targetFolder = input("Enter Target Folder: ")
 
 print("Walking: ", targetFolder, "\n")
 
-tbl = PrettyTable(['AbsPath', 'Type', 'FileSize', 'UTC-Modified', 'UTC-Accessed', 'UTC-Created', 'SHA-256 HASH'])
+tbl = PrettyTable(
+    [
+        "AbsPath",
+        "Type",
+        "FileSize",
+        "UTC-Modified",
+        "UTC-Accessed",
+        "UTC-Created",
+        "SHA-256 HASH",
+    ]
+)
 
 for currentRoot, dirList, fileList in os.walk(targetFolder):
-
     for nextFile in fileList:
-
         fullPath = os.path.join(currentRoot, nextFile)
         absPath = os.path.abspath(fullPath)
 
@@ -35,14 +43,20 @@ for currentRoot, dirList, fileList in os.walk(targetFolder):
 
             stats = os.stat(absPath)
             fileSize = stats.st_size
-            humanTimeLastModified = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(stats.st_mtime))
-            humanTimeLastAccess = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(stats.st_atime))
-            humanTimeLastCreated = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(stats.st_ctime))
+            humanTimeLastModified = time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.gmtime(stats.st_mtime)
+            )
+            humanTimeLastAccess = time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.gmtime(stats.st_atime)
+            )
+            humanTimeLastCreated = time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.gmtime(stats.st_ctime)
+            )
 
             sha256Obj = hashlib.sha256()
-            with open(absPath, 'rb') as target:
+            with open(absPath, "rb") as target:
                 # Read in chunks so large files don't need to fit in memory
-                for block in iter(lambda: target.read(65536), b''):
+                for block in iter(lambda: target.read(65536), b""):
                     sha256Obj.update(block)
             hexDigest = sha256Obj.hexdigest()
 
@@ -50,7 +64,17 @@ for currentRoot, dirList, fileList in os.walk(targetFolder):
             tbl.add_row([absPath, "error", 0, "-", "-", "-", str(err)])
             continue
 
-        tbl.add_row([absPath, fileType, fileSize, humanTimeLastModified, humanTimeLastAccess, humanTimeLastCreated, hexDigest])
+        tbl.add_row(
+            [
+                absPath,
+                fileType,
+                fileSize,
+                humanTimeLastModified,
+                humanTimeLastAccess,
+                humanTimeLastCreated,
+                hexDigest,
+            ]
+        )
 
 tbl.align = "l"  # align the columns left justified
 # display the table

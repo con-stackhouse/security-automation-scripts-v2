@@ -1,4 +1,4 @@
-'''
+"""
 File Metadata Processor
 Author: Connor Stackhouse
 Cyber Operations Engineering - University of Arizona
@@ -21,23 +21,22 @@ Usage:
 Requirements:
      Python 3.x
      No external libraries required
-'''
+"""
 
-import os                           # File system library
-import time                         # Time Conversion Library
-from binascii import hexlify        # hexlify module
+import os  # File system library
+import time  # Time Conversion Library
+from binascii import hexlify  # hexlify module
 
 
 class FileProcessor:
-    ''' FileProcessor Class Definition '''
+    """FileProcessor Class Definition"""
 
     def __init__(self, path):
-        ''' Class Constructor '''
+        """Class Constructor"""
         try:
             self.filePath = path
 
             if os.path.isfile(self.filePath) and os.access(self.filePath, os.R_OK):
-
                 # Obtain the file metadata
                 stats = os.stat(self.filePath)
 
@@ -46,9 +45,9 @@ class FileProcessor:
                 self.fileCreatedTime = time.ctime(stats.st_ctime)
                 self.fileModifiedTime = time.ctime(stats.st_mtime)
                 self.fileAccessTime = time.ctime(stats.st_atime)
-                self.fileMode = '{:016b}'.format(stats.st_mode)
+                self.fileMode = "{:016b}".format(stats.st_mode)
                 self.fileUID = stats.st_uid
-                self.fileHeader = ''
+                self.fileHeader = ""
 
                 self.status = "OK"
 
@@ -61,9 +60,9 @@ class FileProcessor:
             self.status = err
 
     def GetFileHeader(self):
-        ''' Extract the first 20 bytes of the file header '''
+        """Extract the first 20 bytes of the file header"""
         try:
-            with open(self.filePath, 'rb') as fileObj:
+            with open(self.filePath, "rb") as fileObj:
                 header = fileObj.read(20)
                 self.fileHeader = hexlify(header)
                 self.status = "OK"
@@ -73,10 +72,10 @@ class FileProcessor:
             self.status = err
 
     def PrintFileDetails(self):
-        ''' Print the metadata and print the hex representation of the header'''
+        """Print the metadata and print the hex representation of the header"""
         print("\nFile Metadata:")
         print("File Path:               ", self.filePath)
-        print("File Size:               ", '{:,}'.format(self.fileSize), "Bytes")
+        print("File Size:               ", "{:,}".format(self.fileSize), "Bytes")
         print("File Created Time:       ", self.fileCreatedTime)
         print("File Modified Time:      ", self.fileModifiedTime)
         print("File Access Time:        ", self.fileAccessTime)
@@ -85,7 +84,7 @@ class FileProcessor:
         print("Hex Representation:      ", self.fileHeader)
 
     def PrintException(self):
-        ''' Print the exception/status stored on the instance '''
+        """Print the exception/status stored on the instance"""
         print("\nError processing", self.filePath, "-", self.status)
 
 
@@ -93,7 +92,7 @@ while True:
     # prompt user for directory path
     dirPath = input("Enter a Directory to Scan or Q to Quit: ")
 
-    if dirPath.upper() == 'Q':
+    if dirPath.upper() == "Q":
         print("\n\nUser Terminated the Script \n\n")
         break
 
@@ -107,7 +106,6 @@ while True:
     fileList = os.listdir(dirPath)
 
     for possibleFile in fileList:
-
         # Convert the simple filename to the full and absolute path
         fullPath = os.path.join(dirPath, possibleFile)
         absPath = os.path.abspath(fullPath)
@@ -115,7 +113,7 @@ while True:
         # Only process files that we have rights to read
         fileObj = FileProcessor(absPath)
 
-        if fileObj.status != 'OK':
+        if fileObj.status != "OK":
             if os.path.isfile(absPath):
                 print("\nAccess Denied ", absPath)
             else:
@@ -124,7 +122,7 @@ while True:
 
         # Extract the file header and print the details
         fileObj.GetFileHeader()
-        if fileObj.status != 'OK':
+        if fileObj.status != "OK":
             fileObj.PrintException()
             continue
 

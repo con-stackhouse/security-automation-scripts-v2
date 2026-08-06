@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      # Pre-existing style/robustness findings are expected until the
+      # repo-wide formatting pass lands; non-blocking for now so this
+      # doesn't fail CI on unrelated commits.
+      - name: Run ruff check
+        run: ruff check .
+        continue-on-error: true
+
+  sast:
+    name: SAST (bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install bandit
+        run: pip install bandit
+
+      # Currently reports 2 known, intentional findings: MD5 use in
+      # cryptography/rainbow_table_generator.py (rainbow table demo) and
+      # network/tcp_server.py (checksum demo, documented in its docstring).
+      # Non-blocking for now; a follow-up commit can add justified
+      # `# nosec` annotations so this becomes a hard gate.
+      - name: Run bandit
+        run: bandit -r . -x ./.git
+        continue-on-error: true
+
+  dependency-audit:
+    name: Dependency Audit (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      # Currently clean - kept as a hard gate so a newly introduced
+      # known-vulnerable dependency actually fails the build.
+      - name: Audit requirements.txt for known vulnerabilities
+        run: pip-audit -r requirements.txt

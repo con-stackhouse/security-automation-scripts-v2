@@ -1,4 +1,4 @@
-'''
+"""
 
 NLTK Corpus Text Analysis Tool
 Author: Connor Stackhouse
@@ -18,7 +18,8 @@ Security Application:
 
 Usage:
     python3 nltk_corpus_analyzer.py
-    (Prompts for directory path containing .txt files)
+    (Prompts for a directory path containing .txt files, then for a
+    comma-separated list of keywords to search)
 
 Requirements:
     - Python 3.x
@@ -31,12 +32,12 @@ Output:
     - Vocabulary size and frequency
     - Word concordance and similarities
     - Word indexing and occurrence tracking
-    
+
 Example Use Case:
     Analyzing legal documents, security logs, or communication archives
     for specific keywords and patterns.
 
-'''
+"""
 
 import os
 import sys
@@ -47,85 +48,79 @@ from nltk.corpus import stopwords
 from time import sleep
 from prettytable import PrettyTable
 
-nltk.download('stopwords')
 
-nltk.download('punkt')
+def ensureNltkData(resourcePath, packageName):
+    # Only reach out to the network if the data isn't already present -
+    # a text-forensics tool shouldn't make unprompted network calls on
+    # every run, especially in offline/evidence-handling environments.
+    try:
+        nltk.data.find(resourcePath)
+    except LookupError:
+        print("Downloading required NLTK data:", packageName, "...")
+        nltk.download(packageName)
 
-nltk.download('punkt_tab')
 
+try:
+    ensureNltkData("corpora/stopwords", "stopwords")
+    ensureNltkData("tokenizers/punkt", "punkt")
+    ensureNltkData("tokenizers/punkt_tab", "punkt_tab")
 
-
-# Initialize the stopwords set
-
-stopSet = set(stopwords.words('english'))
-
+    # Initialize the stopwords set
+    stopSet = set(stopwords.words("english"))
+except LookupError as err:
+    sys.exit(
+        "\nRequired NLTK data could not be found or downloaded: "
+        + str(err).strip()
+        + "\nCheck your network connection (or pre-populate the NLTK data directory) and try again."
+    )
 
 
 class classNLTKQuery:
-
-    ''' NLTK Query Class '''
-
-
+    """NLTK Query Class"""
 
     def textCorpusInit(self, thePath):
 
         # Validate the path is a directory
 
         if not os.path.isdir(thePath):
-
             return "Path is not a Directory"
-
-
 
         # Validate the path is readable
 
         if not os.access(thePath, os.R_OK):
-
             return "Directory is not Readable"
-
-
 
         # Attempt to Create a corpus with all .txt files found in the directory
 
         try:
+            self.Corpus = PlaintextCorpusReader(thePath, ".*")
 
-            self.Corpus = PlaintextCorpusReader(thePath, '.*')
+            print("Processing Files : ")
 
-            print ("Processing Files : ")
+            print(self.Corpus.fileids())
 
-            print (self.Corpus.fileids())
-
-            print ("Please wait ...")
+            print("Please wait ...")
 
             self.rawText = self.Corpus.raw()
 
             self.tokens = nltk.word_tokenize(self.rawText)
 
-            self.TextCorpus = nltk.Text(self.tokens)         
+            self.TextCorpus = nltk.Text(self.tokens)
 
         except:
-
             return "Corpus Creation Failed"
-
-
 
         self.ActiveTextCorpus = True
 
         return "Success"
 
-
-
     def printCorpusLength(self):
 
-        print("\n\nCorpus Text Length: ", '{:,}'.format(len(self.rawText)))
-
-
+        print("\n\nCorpus Text Length: ", "{:,}".format(len(self.rawText)))
 
     def printTokensFound(self):
 
-        print("\n\nTokens Found: ", '{:,}'.format(len(self.tokens)))
-
-
+        print("\n\nTokens Found: ", "{:,}".format(len(self.tokens)))
 
     def printVocabSize(self):
 
@@ -133,93 +128,80 @@ class classNLTKQuery:
 
         vocab = set(self.tokens)
 
-        print("Vocabulary Size: ", '{:,}'.format(len(vocab)))
-
-
+        print("Vocabulary Size: ", "{:,}".format(len(vocab)))
 
     def searchWordOccurrence(self):
 
-        testWords = ['GLOVE', 'GUN', 'BRONCO', 'BLOOD', 'GUILTY']
-
-        
+        testWords = self.testWords
 
         print("\n\nWord Occurrences:")
 
         for word in testWords:
-
-            # Convert both search word and text to uppercase 
+            # Convert both search word and text to uppercase
 
             count = sum(1 for token in self.tokens if token.upper() == word.upper())
 
-            print("'" + word + "' appears " + '{:,}'.format(count) + " times in the corpus")
-
-
+            print(
+                "'"
+                + word
+                + "' appears "
+                + "{:,}".format(count)
+                + " times in the corpus"
+            )
 
     def generateConcordance(self):
 
-        testWords = ['GLOVE', 'GUN', 'BRONCO', 'BLOOD', 'GUILTY']
-
-        
+        testWords = self.testWords
 
         print("\n\nWord Concordance:")
 
         for word in testWords:
-
             print("\nConcordance for '" + word + "':")
 
             self.TextCorpus.concordance(word.upper(), width=100, lines=100)
 
-
-
     def generateSimilarities(self):
 
-        testWords = ['GLOVE', 'GUN', 'BRONCO', 'BLOOD', 'GUILTY']
-
-        
+        testWords = self.testWords
 
         print("\n\nWord Similarities:")
 
         for word in testWords:
-
             print("\nSimilar words to '" + word + "':")
 
             self.TextCorpus.similar(word.upper(), num=200)
 
-
-
     def printWordIndex(self):
 
-        testWords = ['GLOVE', 'GUN', 'BRONCO', 'BLOOD', 'GUILTY']
-
-        
+        testWords = self.testWords
 
         print("\n\nWord Index:")
 
         for word in testWords:
-
-            indices = [i for i, token in enumerate(self.TextCorpus) if token.upper() == word.upper()]
+            indices = [
+                i
+                for i, token in enumerate(self.TextCorpus)
+                if token.upper() == word.upper()
+            ]
 
             if indices:
+                print(
+                    "First occurrence of '"
+                    + word
+                    + "' is at position: "
+                    + "{:,}".format(indices[0])
+                )
 
-                print("First occurrence of '" + word + "' is at position: " + '{:,}'.format(indices[0]))
-
-                print("Word appears at " + '{:,}'.format(len(indices)) + " positions")                
+                print("Word appears at " + "{:,}".format(len(indices)) + " positions")
 
             else:
-
                 print("'" + word + "' not found in corpus")
-
-
 
     def printVocabulary(self):
 
-        testWords = ['GLOVE', 'GUN', 'BRONCO', 'BLOOD', 'GUILTY']
-
-        
+        testWords = self.testWords
 
         print("\n\nCompiling Vocabulary Frequencies")
-
-        
 
         tbl = PrettyTable(["Vocabulary", "Occurs"])
 
@@ -227,20 +209,14 @@ class classNLTKQuery:
 
         tbl.align["Occurs"] = "r"
 
-        
-
         # Add test words to table
 
         for word in testWords:
+            count = sum(1 for token in self.tokens if token.upper() == word.upper())
 
-            count = sum(1 for token in self.tokens if token.upper() == word)
-
-            tbl.add_row([word, '{:,}'.format(count)])
-
-        
+            tbl.add_row([word, "{:,}".format(count)])
 
         print(tbl)
-
 
 
 def printMenu():
@@ -272,60 +248,42 @@ def printMenu():
     print()
 
 
+# Function to obtain user input
 
-# Function to obtain user input     
 
 def getUserSelection():
 
     printMenu()
 
-    
-
     while True:
-
         try:
-
-            sel = input('Enter Selection (0-8) >> ')
+            sel = input("Enter Selection (0-8) >> ")
 
             menuSelection = int(sel)
 
         except ValueError:
-
-            print('Invalid input. Enter a value between 0-8.')
+            print("Invalid input. Enter a value between 0-8.")
 
             continue
-
-    
 
         if not menuSelection in range(0, 9):
-
-            print('Invalid input. Enter a value between 0-8.')
+            print("Invalid input. Enter a value between 0-8.")
 
             continue
-
-    
 
         return menuSelection
 
 
-
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     print("Welcome to the NLTK Query Experimentation")
 
     print("Please wait loading NLTK ... \n")
-
-    
 
     print("Input full path name where intended corpus file or files are stored")
 
     print("Format for Windows e.g. ./CORPUS \n")
 
-    
-
-    userSpecifiedPath = input("Path: ") 
-
-    
+    userSpecifiedPath = input("Path: ")
 
     # Attempt to create a text Corpus
 
@@ -333,105 +291,62 @@ if __name__ == '__main__':
 
     result = oNLTK.textCorpusInit(userSpecifiedPath)
 
-    
-
     if result == "Success":
+        keywordInput = input("Enter keywords to search for (comma-separated): ")
+        oNLTK.testWords = [
+            word.strip() for word in keywordInput.split(",") if word.strip()
+        ]
 
         menuSelection = -1
 
-        
-
         while menuSelection != 0:
-
             if menuSelection != -1:
-
                 print()
 
-                s = input('Press Enter to continue...')
+                s = input("Press Enter to continue...")
 
                 printMenu()
 
-                
-
-            menuSelection = getUserSelection()        
-
-            
+            menuSelection = getUserSelection()
 
             if menuSelection == 1:
-
                 oNLTK.printCorpusLength()
 
-            
-
             elif menuSelection == 2:
-
                 oNLTK.printTokensFound()
 
-    
-
             elif menuSelection == 3:
-
                 oNLTK.printVocabSize()
 
-    
+            elif menuSelection == 4:
+                oNLTK.searchWordOccurrence()
 
-            elif menuSelection == 4:         
-
-                oNLTK.searchWordOccurrence()      
-
-    
-
-            elif menuSelection == 5:    
-
-                oNLTK.generateConcordance()      
-
-    
+            elif menuSelection == 5:
+                oNLTK.generateConcordance()
 
             elif menuSelection == 6:
+                oNLTK.generateSimilarities()
 
-                oNLTK.generateSimilarities()      
-
-    
-
-            elif menuSelection == 7:    
-
+            elif menuSelection == 7:
                 oNLTK.printWordIndex()
 
-    
-
-            elif menuSelection == 8:    
-
+            elif menuSelection == 8:
                 oNLTK.printVocabulary()
 
-                
-
-            elif menuSelection == 0:    
-
+            elif menuSelection == 0:
                 print("Goodbye")
 
                 print()
 
-                
-
             elif menuSelection == -1:
-
                 continue
 
-            
-
             else:
-
                 print("unexpected error condition")
 
                 menuSelection = 0
 
-                
-
             sleep(3)
 
-    
-
     else:
-
         print("Closing NLTK Query Experimentation")
-

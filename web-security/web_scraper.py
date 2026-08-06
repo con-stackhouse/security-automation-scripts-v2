@@ -1,4 +1,4 @@
-'''
+"""
 Web Scraper & Reconnaissance Tool
 Author: Connor Stackhouse
 Course: Cyber Operations Engineering - University of Arizona
@@ -30,17 +30,17 @@ Output:
 
 Note:
     Only use on websites you have permission to scan.
-'''
+"""
 
 import os
-import requests                       # Python library for url requests
-from bs4 import BeautifulSoup         # 3rd party BeautifulSoup library
-from PIL import Image                 # 3rd party Python Image library
+import requests  # Python library for url requests
+from bs4 import BeautifulSoup  # 3rd party BeautifulSoup library
+from PIL import Image  # 3rd party Python Image library
 from io import BytesIO
 from urllib.parse import urljoin
 
-URL = 'https://casl.website'
-saveImg = os.path.join(os.getcwd(), 'images')
+URL = "https://casl.website"
+saveImg = os.path.join(os.getcwd(), "images")
 REQUEST_TIMEOUT = 10  # seconds
 
 os.makedirs(saveImg, exist_ok=True)
@@ -49,22 +49,22 @@ os.makedirs(saveImg, exist_ok=True)
 page = requests.get(URL, timeout=REQUEST_TIMEOUT)
 
 # convert the page into a beautifulsoup object for processing
-soup = BeautifulSoup(page.text, 'html.parser')
+soup = BeautifulSoup(page.text, "html.parser")
 
 pageLinks = set()
 
-linkTags = soup.findAll('a')
+linkTags = soup.findAll("a")
 
 if soup.title is not None:
     pageTitle = soup.title.string
 else:
-    pageTitle = 'No title found'
+    pageTitle = "No title found"
 print("Page Title: " + pageTitle)
 print()
 
 if linkTags:
     for eachLink in linkTags:
-        newLink = eachLink.get('href')
+        newLink = eachLink.get("href")
 
         if not newLink:
             continue
@@ -72,10 +72,10 @@ if linkTags:
         newLink = urljoin(URL, newLink)
         pageLinks.add(newLink)
 
-imageTags = soup.findAll('img')
+imageTags = soup.findAll("img")
 if imageTags:
     for eachImage in imageTags:
-        imgURL = eachImage.get('src')
+        imgURL = eachImage.get("src")
         if not imgURL:
             continue
 
@@ -84,9 +84,13 @@ if imageTags:
             print("Image URL:  ", imgURL)
 
             # display the alternative text associated with the image
-            print("Alt text: ", eachImage.get('alt', 'no alt text provided'))
-            imgURL = urljoin(URL, imgURL)  # resolve relative/protocol-relative URLs against the base page
-            response = requests.get(imgURL, timeout=REQUEST_TIMEOUT)  # Get image from the URL
+            print("Alt text: ", eachImage.get("alt", "no alt text provided"))
+            imgURL = urljoin(
+                URL, imgURL
+            )  # resolve relative/protocol-relative URLs against the base page
+            response = requests.get(
+                imgURL, timeout=REQUEST_TIMEOUT
+            )  # Get image from the URL
             imageName = os.path.basename(imgURL)
             img = Image.open(BytesIO(response.content))  # Download the image
             img.save(os.path.join(saveImg, imageName))  # Save the image

@@ -1,4 +1,4 @@
-'''
+"""
 Email & URL Extractor from Memory Dumps
 Author: Connor Stackhouse
 Course: Cyber Operations Engineering - University of Arizona
@@ -26,84 +26,122 @@ Requirements:
 Output:
     - Sorted tables of email addresses by frequency
     - Sorted tables of URLs by frequency
-'''
+"""
 
 import os
 import re
 import sys
 from prettytable import PrettyTable
 
-print("\nExtract e-mails and urls from the memory dump provided\n")
+# Regular expression patterns (raw byte strings so backslash escapes
+# are passed through to the regex engine, not interpreted by Python)
+ePatt = re.compile(rb"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}")
+uPatt = re.compile(rb"\w+:\/\/[\w@][\w.:@]+\/?[\w.\.?=%&=\-@$,]*")
+wPatt = re.compile(rb"[a-zA-Z]{5,15}")
 
-try:
-    # Prompt for file to process and chunk size
-    largeFile = input("Enter the name of the memory dump file: ")
-    chunkSize = int(input("What size chunks?  "))
+# Minimum number of trailing bytes always carried into the next chunk,
+# regardless of whether a match was found there. Needed because a partial
+# match near the end of the buffer (e.g. only "analyst@exa" of an email)
+# is too short to satisfy a pattern's minimum length, so finditer() won't
+# return a match object for it at all - there would be nothing to defer
+# without this floor, and those bytes would be lost.
+OVERLAP_SIZE = 20
 
-    # Regular expression patterns (raw byte strings so backslash escapes
-    # are passed through to the regex engine, not interpreted by Python)
-    ePatt = re.compile(rb'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}')
-    uPatt = re.compile(rb'\w+:\/\/[\w@][\w.:@]+\/?[\w.\.?=%&=\-@$,]*')
-    wPatt = re.compile(rb'[a-zA-Z]{5,15}')
 
-    # How many bytes of the previous chunk are carried forward so matches
-    # spanning a chunk boundary aren't missed
-    OVERLAP_SIZE = 20
+def countMatches(pattern, buffer, isFinalChunk, marginSize, counts):
+    # Matches fully before `limit` are guaranteed complete: nothing in the
+    # reserved trailing margin could extend backward into them. A match
+    # that ends beyond `limit` might still be truncated by the chunk
+    # boundary, so it's deferred - return its start position as the
+    # carry-forward point so it's re-checked against the next chunk
+    # instead of being counted now. `carryStart` also defaults to `limit`
+    # even when no match touches the margin, so a too-short partial match
+    # (below the pattern's minimum length) is still carried forward.
+    limit = len(buffer) if isFinalChunk else max(0, len(buffer) - marginSize)
+    carryStart = limit
+    for match in pattern.finditer(buffer):
+        if not isFinalChunk and match.end() > limit:
+            carryStart = min(carryStart, match.start())
+            continue
+        key = match.group().decode()
+        counts[key] = counts.get(key, 0) + 1
+    return carryStart
 
+
+def processFile(filePath, chunkSize, marginSize=OVERLAP_SIZE):
     emailDict = {}
     urlCount = {}
     wordDict = {}
+    # Each pattern can have its own match straddling the chunk boundary,
+    # so each needs its own independent carry-forward buffer.
+    emailCarry = b""
+    urlCarry = b""
+    wordCarry = b""
 
-    def countMatches(pattern, buffer, overlapLen, counts):
-        # Only count matches starting at/after the overlap boundary so a
-        # match fully contained in the previous chunk's tail isn't counted
-        # twice (once as part of the previous chunk, once here)
-        for match in pattern.finditer(buffer):
-            if match.start() < overlapLen:
-                continue
-            key = match.group().decode()
-            counts[key] = counts.get(key, 0) + 1
+    with open(filePath, "rb") as binaryFile:
+        while True:
+            raw = binaryFile.read(chunkSize)
+            isFinalChunk = not raw
 
-    if os.path.isfile(largeFile):
-        overlap = b''
+            emailBuffer = emailCarry + raw
+            emailCarryStart = countMatches(
+                ePatt, emailBuffer, isFinalChunk, marginSize, emailDict
+            )
 
-        with open(largeFile, 'rb') as binaryFile:
-            while True:
-                fileChunk = binaryFile.read(chunkSize)
-                if not fileChunk:
-                    print("\nFile Processed:", largeFile)
-                    print("\nResult Tables:")
-                    break
+            urlBuffer = urlCarry + raw
+            urlCarryStart = countMatches(
+                uPatt, urlBuffer, isFinalChunk, marginSize, urlCount
+            )
 
-                fileChunk = overlap + fileChunk
+            wordBuffer = wordCarry + raw
+            wordCarryStart = countMatches(
+                wPatt, wordBuffer, isFinalChunk, marginSize, wordDict
+            )
 
-                countMatches(ePatt, fileChunk, len(overlap), emailDict)
-                countMatches(uPatt, fileChunk, len(overlap), urlCount)
-                countMatches(wPatt, fileChunk, len(overlap), wordDict)
+            if isFinalChunk:
+                break
 
-                # Manage overlap for next chunk
-                overlap = fileChunk[-OVERLAP_SIZE:]
+            emailCarry = emailBuffer[emailCarryStart:]
+            urlCarry = urlBuffer[urlCarryStart:]
+            wordCarry = wordBuffer[wordCarryStart:]
 
-        # Display results
-        emailTable = PrettyTable(["OCCURS", "EMAIL"])
-        for key, value in emailDict.items():
-            emailTable.add_row([value, key])
-        emailTable.align = 'l'
-        print("\nEmails Found:")
-        print(emailTable.get_string(sortby="OCCURS", reversesort=True))
+    return emailDict, urlCount, wordDict
 
-        urlTable = PrettyTable(["OCCURS", "URL"])
-        for key, value in urlCount.items():
-            urlTable.add_row([value, key])
-        urlTable.align = 'l'
-        print("\nURLs Found:")
-        print(urlTable.get_string(sortby="OCCURS", reversesort=True))
 
-    else:
-        print(largeFile, "is not a valid file")
-        sys.exit("Script Aborted")
+if __name__ == "__main__":
+    print("\nExtract e-mails and urls from the memory dump provided\n")
 
-except Exception as err:
-    sys.exit("\nException: " + str(err) + " Script Aborted")
+    try:
+        # Prompt for file to process and chunk size
+        largeFile = input("Enter the name of the memory dump file: ")
+        chunkSize = int(input("What size chunks?  "))
 
-print("\nFile Processed ... Script End")
+        if os.path.isfile(largeFile):
+            emailDict, urlCount, wordDict = processFile(largeFile, chunkSize)
+
+            print("\nFile Processed:", largeFile)
+            print("\nResult Tables:")
+
+            # Display results
+            emailTable = PrettyTable(["OCCURS", "EMAIL"])
+            for key, value in emailDict.items():
+                emailTable.add_row([value, key])
+            emailTable.align = "l"
+            print("\nEmails Found:")
+            print(emailTable.get_string(sortby="OCCURS", reversesort=True))
+
+            urlTable = PrettyTable(["OCCURS", "URL"])
+            for key, value in urlCount.items():
+                urlTable.add_row([value, key])
+            urlTable.align = "l"
+            print("\nURLs Found:")
+            print(urlTable.get_string(sortby="OCCURS", reversesort=True))
+
+        else:
+            print(largeFile, "is not a valid file")
+            sys.exit("Script Aborted")
+
+    except Exception as err:
+        sys.exit("\nException: " + str(err) + " Script Aborted")
+
+    print("\nFile Processed ... Script End")

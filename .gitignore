@@ -1,3 +1,21 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Script-generated / input artifacts - not meant to be committed
+rainbow.db
+system_info_logger.txt
+mem.raw
+redhat.txt
+images/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

@@ -1,4 +1,4 @@
-'''
+"""
 
 Digital Image Scanner & Analyzer
 Author: Connor Stackhouse
@@ -30,7 +30,7 @@ Output:
     - File path and size
     - Image format, dimensions, and color mode
 
-'''
+"""
 
 import sys
 
@@ -41,66 +41,69 @@ from PIL import Image
 from prettytable import PrettyTable
 
 
-
 print("\nScripting Solution\n")
 
 
-
 while True:
-
     path = input("\nProvide path to examine (Q to Quit): ")
 
-    if path.lower() == 'q':
-
+    if path.lower() == "q":
         break
 
     if os.path.isdir(path):
-
         fileList = os.listdir(path)
 
-        
+        # Create table
 
-        # Create table 
-
-        table = PrettyTable(["Image", "File", "FileSize", "Ext", "Format", "Width", "Height", "Type"])
-
-        
+        table = PrettyTable(
+            ["Image", "File", "FileSize", "Ext", "Format", "Width", "Height", "Type"]
+        )
 
         for file in fileList:
-
             fullPath = os.path.join(path, file)
 
             if os.path.isfile(fullPath):
-
                 ext = os.path.splitext(file)[1]
 
-                fileSize = os.path.getsize(fullPath)  
+                fileSize = os.path.getsize(fullPath)
 
-                formattedFileSize = '{:,}'.format(fileSize)
-
-                
+                formattedFileSize = "{:,}".format(fileSize)
 
                 try:
-
                     with Image.open(fullPath) as im:
-
-                        table.add_row(['YES', fullPath, formattedFileSize, ext, im.format, im.width, im.height, im.mode])
+                        table.add_row(
+                            [
+                                "YES",
+                                fullPath,
+                                formattedFileSize,
+                                ext,
+                                im.format,
+                                im.width,
+                                im.height,
+                                im.mode,
+                            ]
+                        )
 
                 except Exception as err:
+                    table.add_row(
+                        [
+                            "NO",
+                            fullPath,
+                            formattedFileSize,
+                            ext,
+                            "[NA]",
+                            "[NA]",
+                            "[NA]",
+                            "[NA]",
+                        ]
+                    )
 
-                    table.add_row(['NO', fullPath, formattedFileSize, ext, '[NA]', '[NA]', '[NA]', '[NA]'])
-
-        
-
-        table.align = 'l'
+        table.align = "l"
 
         print(table)
 
     else:
-
         print("Path Provided is Not a Folder")
 
-    
 
 print("Script Done")
-
