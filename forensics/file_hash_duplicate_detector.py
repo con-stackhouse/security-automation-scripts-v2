@@ -7,7 +7,7 @@ Course: Cyber Operations Engineering - University of Arizona
 Date: September 2024
 
 Purpose:
-    Recursively scans directories and generates MD5 hashes to identify
+    Recursively scans directories and generates SHA-256 hashes to identify
     duplicate files. Useful for deduplication and forensic analysis.
 
 Security Application:
@@ -25,11 +25,15 @@ Requirements:
     - prettytable: pip install prettytable
 
 Output:
-    Table showing MD5 hash and the file paths that share it
+    Table showing SHA-256 hash and the file paths that share it
 
 Note:
     Only hashes with more than one file are duplicates; unique hashes
-    are omitted from the report.
+    are omitted from the report. SHA-256 is used instead of MD5:
+    MD5 has known collision weaknesses, and while an accidental
+    collision is very unlikely in a non-adversarial dedup scan,
+    SHA-256 costs little extra and avoids relying on a broken
+    primitive.
 '''
 
 import os
@@ -51,7 +55,7 @@ for root, dirs, files in os.walk(directory):
         fileList.append(fullPath)
 
 for filePath in fileList:
-    hashObj = hashlib.md5()
+    hashObj = hashlib.sha256()
     try:
         with open(filePath, 'rb') as file:
             # Read in chunks so large files don't need to fit in memory
@@ -61,15 +65,15 @@ for filePath in fileList:
         print("Could not read", filePath, "-", err)
         continue
 
-    md5Hash = hashObj.hexdigest()
-    fileHashes.setdefault(md5Hash, []).append(filePath)
+    fileHash = hashObj.hexdigest()
+    fileHashes.setdefault(fileHash, []).append(filePath)
 
-tbl = PrettyTable(["MD5 Hash", "File Path"])
+tbl = PrettyTable(["SHA-256 Hash", "File Path"])
 tbl.align = "l"
 
-for md5Hash, paths in fileHashes.items():
+for fileHash, paths in fileHashes.items():
     if len(paths) > 1:
         for filePath in paths:
-            tbl.add_row([md5Hash, filePath])
+            tbl.add_row([fileHash, filePath])
 
 print(tbl)
