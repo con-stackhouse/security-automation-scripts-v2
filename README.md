@@ -57,7 +57,7 @@ Python security and digital forensics scripts developed during University of Ari
 - **Purpose:** Comprehensive forensic system profiling and file cataloging
 - **Techniques:** System metadata collection, SHA-256 hashing, forensic logging
 - **Use Case:** Incident response, evidence collection, system baseline
-- **Skills:** System profiling, forensic documentation, chain of custody
+- **Skills:** System profiling, forensic documentation, chain-of-custody tamper-evidence (writes a SHA-256 hash of the completed log alongside it)
 
 #### 7. Firewall Log Parser
 **File:** `forensics/firewall_log_parser.py`

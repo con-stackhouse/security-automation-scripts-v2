@@ -30,9 +30,16 @@ Output:
     - Complete system profile (OS, hardware, network)
     - SHA-256 file catalog with timestamps
     - File count summary
+    Also writes system_info_logger.txt.sha256, a SHA-256 hash of the
+    completed log file, in `<hash>  <filename>` format.
 
 Note:
-    Output log file serves as forensic documentation for investigations
+    Output log file serves as forensic documentation for investigations.
+    The companion .sha256 file lets a later reviewer verify the log
+    wasn't altered after generation - this is tamper-evidence, not a
+    cryptographic signature: anyone with write access to both files
+    could regenerate a matching hash, so it doesn't provide
+    non-repudiation on its own.
 
 """
 
@@ -142,6 +149,21 @@ def main(investigator=None, organization=None, targetFolder=None):
 
     logging.info("Files Processed: " + str(filesProcessed))
 
+    # Flush and close the log handlers before hashing so the hash covers
+    # everything that was written, not a partially-buffered snapshot
+    logging.shutdown()
+
+    logHashObj = hashlib.sha256()
+    with open("system_info_logger.txt", "rb") as logFile:
+        for block in iter(lambda: logFile.read(65536), b""):
+            logHashObj.update(block)
+    logHexDigest = logHashObj.hexdigest()
+
+    with open("system_info_logger.txt.sha256", "w") as hashFile:
+        hashFile.write(logHexDigest + "  system_info_logger.txt\n")
+
+    return logHexDigest
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -153,5 +175,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("\n\nSystem Information Forensic Logger\n")
-    main(args.investigator, args.organization, args.path)
+    logHexDigest = main(args.investigator, args.organization, args.path)
+    print("\nLog SHA-256:", logHexDigest)
     print("\nScript End")
