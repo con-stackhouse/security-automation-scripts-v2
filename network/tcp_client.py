@@ -10,12 +10,12 @@ Date: October 2024
 
 Purpose:
     Demonstrates TCP socket programming by creating a client that sends
-    messages to a server and receives MD5 hash confirmations.
+    messages to a server and receives MD5 checksum responses.
 
 Security Application:
     - Network communication protocols
     - Client-server architecture
-    - Message integrity verification
+    - Checksum exchange demonstration
     - Socket programming fundamentals
 
 Usage:
@@ -27,7 +27,15 @@ Requirements:
     - No external libraries required
 
 Output:
-    Sends messages and receives MD5 hash responses from server
+    Sends messages and receives MD5 checksum responses from server
+
+Note:
+    The MD5 digest exchanged here is a simple checksum, not a
+    security control. A bare, unkeyed hash provides no message
+    authentication or tamper protection: anyone who can modify the
+    message in transit can recompute a matching MD5 digest. Real
+    message authentication requires a keyed MAC (e.g. HMAC-SHA256)
+    or a signature scheme.
 
 '''
 

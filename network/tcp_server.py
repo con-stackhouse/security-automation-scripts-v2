@@ -11,13 +11,12 @@ Date: October 2024
 
 Purpose:
     Demonstrates TCP socket programming by creating a server that receives
-    messages, calculates MD5 hashes, and sends confirmations back to clients.
+    messages, calculates MD5 checksums, and sends them back to clients.
 
 Security Application:
     - Network communication protocols
     - Server-side socket programming
-    - Message integrity verification
-    - Hash-based authentication concepts
+    - Checksum exchange demonstration
 
 Usage:
     python3 tcp_server.py
@@ -28,10 +27,16 @@ Requirements:
     - No external libraries required
 
 Output:
-    Listens on port 5555, receives messages, returns MD5 hashes
-    
+    Listens on port 5555, receives messages, returns MD5 checksums
+
 Note:
-    Server runs until receiving 'exit' command or manual termination
+    Server runs until receiving 'exit' command or manual termination.
+    The MD5 digest returned here is a simple checksum, not a security
+    control. A bare, unkeyed hash provides no message authentication
+    or tamper protection: anyone who can modify the message in
+    transit can recompute a matching MD5 digest. Real message
+    authentication requires a keyed MAC (e.g. HMAC-SHA256) or a
+    signature scheme.
 
 '''
 
