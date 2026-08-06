@@ -1,16 +1,30 @@
 '''
 Memory Dump Word Frequency Analyzer
 Author: Connor Stackhouse
-May 2024
+Course: Cyber Operations Engineering - University of Arizona
+Date: May 2024
 
 Purpose:
     Scans a raw memory dump in fixed-size chunks and counts occurrences
     of alphabetic word tokens, then reports counts for a few keywords
     of interest (kernel, encrypt, fairwitness).
 
+Security Application:
+    - Memory forensics
+    - Keyword-based triage of memory dumps
+    - Memory-efficient processing of large binary files
+
 Usage:
     python3 memory_forensics_analyzer.py
     (Processes mem.raw file in current directory)
+
+Requirements:
+    - Python 3.x
+    - mem.raw file in same directory
+
+Output:
+    Console counts for the keywords "kernel", "encrypt", and
+    "fairwitness" found in the memory dump
 '''
 
 import re

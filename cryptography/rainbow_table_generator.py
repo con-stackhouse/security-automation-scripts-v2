@@ -1,5 +1,37 @@
 '''
 Rainbow Table Generator
+Author: Connor Stackhouse
+Course: Cyber Operations Engineering - University of Arizona
+
+Purpose:
+    Builds a simple rainbow table by MD5-hashing every password
+    generated from a small fixed character set (4-7 characters from
+    "abc123&"), then serializes the table to disk and reloads it to
+    demonstrate a basic precomputed hash-lookup attack.
+
+Security Application:
+    - Password security education
+    - Demonstrating precomputed hash-attack concepts
+    - Illustrating why unsalted, fast hashes (like MD5) are unsuitable
+      for password storage
+
+Usage:
+    python3 rainbow_table_generator.py
+    (No arguments; writes rainbow.db in the current directory)
+
+Requirements:
+    - Python 3.x
+    - prettytable: pip install prettytable
+
+Output:
+    - rainbow.db: pickled dictionary mapping MD5 hash to password
+    - Console table showing the first and last 5 entries of the
+      reloaded table
+
+Note:
+    Educational demonstration only. The character set and password
+    lengths are intentionally small; this is not a production-scale
+    rainbow table.
 '''
 import itertools
 import hashlib
