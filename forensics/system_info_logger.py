@@ -18,6 +18,7 @@ Security Application:
 Usage:
     python3 system_info_logger.py
     (Prompts for investigator name and target folder)
+    python3 system_info_logger.py --investigator "Jane Doe" --organization "Class Code" --path /some/dir
 
 Requirements:
     - Python 3.x
@@ -35,6 +36,7 @@ Note:
 
 """
 
+import argparse
 import os
 import re
 import logging
@@ -67,7 +69,7 @@ def getSystemInfo():
         return False
 
 
-def main():
+def main(investigator=None, organization=None, targetFolder=None):
 
     # Remove any old logging script
     if os.path.isfile("system_info_logger.txt"):
@@ -81,8 +83,8 @@ def main():
     )
     logging.info("Script Start\n")
 
-    investigator = input("Investigator Name:  ")
-    organization = input("Class Code  :       ")
+    investigator = investigator if investigator else input("Investigator Name:  ")
+    organization = organization if organization else input("Class Code  :       ")
 
     logging.info("Investigator Name:  " + investigator)
     logging.info("Class Code:  " + organization)
@@ -97,7 +99,7 @@ def main():
             logging.info(key + ": " + str(value))
         logging.info("\n")
 
-        targetFolder = input("Enter a specified folder: ")
+        targetFolder = targetFolder if targetFolder else input("Enter a specified folder: ")
 
         for currentRoot, dirList, fileList in os.walk(targetFolder):
             for nextFile in fileList:
@@ -142,6 +144,14 @@ def main():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Profile this system and hash-catalog a target folder for forensic documentation."
+    )
+    parser.add_argument("--investigator", help="Investigator name (prompts interactively if omitted)")
+    parser.add_argument("--organization", help="Class/organization code (prompts interactively if omitted)")
+    parser.add_argument("--path", help="Target folder to catalog (prompts interactively if omitted)")
+    args = parser.parse_args()
+
     print("\n\nSystem Information Forensic Logger\n")
-    main()
+    main(args.investigator, args.organization, args.path)
     print("\nScript End")
