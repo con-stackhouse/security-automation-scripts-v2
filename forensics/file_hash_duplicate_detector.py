@@ -19,6 +19,7 @@ Security Application:
 Usage:
     python3 file_hash_duplicate_detector.py
     (Scans current directory and subdirectories)
+    python3 file_hash_duplicate_detector.py --path /some/dir
 
 Requirements:
     - Python 3.x
@@ -36,11 +37,20 @@ Note:
     primitive.
 """
 
+import argparse
 import os
 import hashlib
 from prettytable import PrettyTable
 
-directory = "."
+parser = argparse.ArgumentParser(
+    description="Recursively scan for duplicate files using SHA-256 hashes."
+)
+parser.add_argument(
+    "--path", default=".", help="Directory to scan (defaults to current directory)"
+)
+args = parser.parse_args()
+
+directory = args.path
 
 fileList = []
 fileHashes = {}
