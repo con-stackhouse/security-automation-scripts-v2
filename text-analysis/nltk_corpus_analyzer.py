@@ -48,17 +48,30 @@ from nltk.corpus import stopwords
 from time import sleep
 from prettytable import PrettyTable
 
-nltk.download('stopwords')
 
-nltk.download('punkt')
+def ensureNltkData(resourcePath, packageName):
+    # Only reach out to the network if the data isn't already present -
+    # a text-forensics tool shouldn't make unprompted network calls on
+    # every run, especially in offline/evidence-handling environments.
+    try:
+        nltk.data.find(resourcePath)
+    except LookupError:
+        print("Downloading required NLTK data:", packageName, "...")
+        nltk.download(packageName)
 
-nltk.download('punkt_tab')
 
+try:
+    ensureNltkData('corpora/stopwords', 'stopwords')
+    ensureNltkData('tokenizers/punkt', 'punkt')
+    ensureNltkData('tokenizers/punkt_tab', 'punkt_tab')
 
-
-# Initialize the stopwords set
-
-stopSet = set(stopwords.words('english'))
+    # Initialize the stopwords set
+    stopSet = set(stopwords.words('english'))
+except LookupError as err:
+    sys.exit(
+        "\nRequired NLTK data could not be found or downloaded: " + str(err).strip()
+        + "\nCheck your network connection (or pre-populate the NLTK data directory) and try again."
+    )
 
 
 
