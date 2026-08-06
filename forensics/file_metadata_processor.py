@@ -64,7 +64,7 @@ class FileProcessor:
         try:
             with open(self.filePath, "rb") as fileObj:
                 header = fileObj.read(20)
-                self.fileHeader = hexlify(header)
+                self.fileHeader = hexlify(header).decode()
                 self.status = "OK"
         except Exception as err:
             # Catch any exceptions and store the results
