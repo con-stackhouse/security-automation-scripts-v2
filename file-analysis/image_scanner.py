@@ -51,52 +51,51 @@ while True:
         break
 
     if os.path.isdir(path):
-        fileList = os.listdir(path)
-
         # Create table
 
         table = PrettyTable(
             ["Image", "File", "FileSize", "Ext", "Format", "Width", "Height", "Type"]
         )
 
-        for file in fileList:
-            fullPath = os.path.join(path, file)
+        for currentRoot, dirList, fileList in os.walk(path):
+            for file in fileList:
+                fullPath = os.path.join(currentRoot, file)
 
-            if os.path.isfile(fullPath):
-                ext = os.path.splitext(file)[1]
+                if os.path.isfile(fullPath):
+                    ext = os.path.splitext(file)[1]
 
-                fileSize = os.path.getsize(fullPath)
+                    fileSize = os.path.getsize(fullPath)
 
-                formattedFileSize = "{:,}".format(fileSize)
+                    formattedFileSize = "{:,}".format(fileSize)
 
-                try:
-                    with Image.open(fullPath) as im:
+                    try:
+                        with Image.open(fullPath) as im:
+                            table.add_row(
+                                [
+                                    "YES",
+                                    fullPath,
+                                    formattedFileSize,
+                                    ext,
+                                    im.format,
+                                    im.width,
+                                    im.height,
+                                    im.mode,
+                                ]
+                            )
+
+                    except Exception as err:
                         table.add_row(
                             [
-                                "YES",
+                                "NO",
                                 fullPath,
                                 formattedFileSize,
                                 ext,
-                                im.format,
-                                im.width,
-                                im.height,
-                                im.mode,
+                                "[NA]",
+                                "[NA]",
+                                "[NA]",
+                                "[NA]",
                             ]
                         )
-
-                except Exception as err:
-                    table.add_row(
-                        [
-                            "NO",
-                            fullPath,
-                            formattedFileSize,
-                            ext,
-                            "[NA]",
-                            "[NA]",
-                            "[NA]",
-                            "[NA]",
-                        ]
-                    )
 
         table.align = "l"
 
