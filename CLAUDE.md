@@ -5,11 +5,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this repository is
 
 A collection of 15 independent, single-file Python scripts written for a university Cyber Operations
-Engineering program. There is no shared package, no build system, no CLI framework, and no test suite —
-each script is run directly with `python3 <script>.py` from its own directory. Scripts are grouped into
-category folders: `forensics/`, `network/`, `file-analysis/`, `cryptography/`, `text-analysis/`,
-`web-security/`. See `README.md` for the full per-script catalog (purpose, techniques, use case) if you
-need a description of a specific tool.
+Engineering program. There is no shared package, build system, or CLI framework — each script is run
+directly with `python3 <script>.py` from its own directory. Scripts are grouped into category folders:
+`forensics/`, `network/`, `file-analysis/`, `cryptography/`, `text-analysis/`, `web-security/`. See
+`README.md` for the full per-script catalog (purpose, techniques, use case) if you need a description of
+a specific tool. A small pytest suite in `tests/` covers the trickiest shared logic (chunk-boundary
+handling in the memory-forensics scripts); most scripts otherwise have no automated coverage.
 
 Do not introduce a shared library, `setup.py`/`pyproject.toml`, or cross-script imports unless asked —
 the scripts are intentionally standalone coursework artifacts, not a package.
@@ -35,17 +36,27 @@ python3 <category>/<script>.py
   socket options (`SIO_RCVALL`/`RCVALL_ON`) — it will not run unmodified on macOS/Linux.
 - `network/tcp_server.py` must be started before `network/tcp_client.py`; they communicate over
   `localhost:5555`.
-- There is no test suite, linter config, or CI in this repo. Validate changes by running the affected
+- GitHub Actions CI (`.github/workflows/ci.yml`) runs ruff, bandit, and pip-audit on every push/PR.
+  `pytest` (see `tests/`) covers the chunk-boundary logic in the memory-forensics scripts; there is no
+  broader test suite or linter config beyond that, so validate other changes by running the affected
   script directly.
 
 ## Patterns shared across scripts
 
-- **Chunked binary processing with overlap**: the memory-forensics scripts
+- **Chunked binary processing with deferred boundary matches**: the memory-forensics scripts
   (`memory_forensics_analyzer.py`, `memory_string_analyzer.py`, `email_url_extractor.py`) read large
-  binary dumps in fixed-size chunks via `file.read(CHUNK_SIZE)` and carry forward a small `overlap`
-  buffer (`OVERLAP_SIZE` bytes) from the end of the previous chunk. Regex matches starting before the
-  overlap boundary are skipped to avoid double-counting a match that spans a chunk boundary. If you
-  modify chunking logic in one of these, check whether the same fix is needed in the others.
+  binary dumps in fixed-size chunks via `file.read(CHUNK_SIZE)`. Each script's `countMatches()` reserves
+  a trailing margin (`OVERLAP_SIZE` bytes, still 20) of the buffer as "possibly incomplete": any match
+  ending beyond that margin is deferred rather than counted, and the margin is carried forward
+  unconditionally even when nothing currently matches there, since a partial match near the end (e.g.
+  only 3 of a 5+ letter word) is too short to satisfy the pattern at all yet - there'd be nothing for
+  `finditer()` to defer without that floor, and those bytes would be silently lost. Once more data
+  arrives (or the final chunk is reached, since nothing can extend a match further at EOF), the deferred
+  region is re-evaluated and counted exactly once. This replaced an earlier design that only skipped
+  matches *starting* before a fixed overlap boundary, which could silently miscount (undercount or
+  mis-match) anything spanning a chunk boundary - see `tests/test_extraction.py` for the boundary cases
+  this covers. If you modify chunking logic in one of these, check whether the same fix is needed in the
+  others.
 - **Streaming hash computation**: file-hashing scripts (`file_hash_analyzer.py`,
   `file_hash_duplicate_detector.py`, `system_info_logger.py`) hash files in `65536`-byte blocks via
   `iter(lambda: f.read(65536), b'')` rather than reading whole files into memory, so hashing works on
