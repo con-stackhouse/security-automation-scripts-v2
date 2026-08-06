@@ -18,7 +18,8 @@ Security Application:
 
 Usage:
     python3 nltk_corpus_analyzer.py
-    (Prompts for directory path containing .txt files)
+    (Prompts for a directory path containing .txt files, then for a
+    comma-separated list of keywords to search)
 
 Requirements:
     - Python 3.x
@@ -139,7 +140,7 @@ class classNLTKQuery:
 
     def searchWordOccurrence(self):
 
-        testWords = ['GLOVE', 'GUN', 'BRONCO', 'BLOOD', 'GUILTY']
+        testWords = self.testWords
 
         
 
@@ -157,7 +158,7 @@ class classNLTKQuery:
 
     def generateConcordance(self):
 
-        testWords = ['GLOVE', 'GUN', 'BRONCO', 'BLOOD', 'GUILTY']
+        testWords = self.testWords
 
         
 
@@ -173,7 +174,7 @@ class classNLTKQuery:
 
     def generateSimilarities(self):
 
-        testWords = ['GLOVE', 'GUN', 'BRONCO', 'BLOOD', 'GUILTY']
+        testWords = self.testWords
 
         
 
@@ -189,7 +190,7 @@ class classNLTKQuery:
 
     def printWordIndex(self):
 
-        testWords = ['GLOVE', 'GUN', 'BRONCO', 'BLOOD', 'GUILTY']
+        testWords = self.testWords
 
         
 
@@ -213,7 +214,7 @@ class classNLTKQuery:
 
     def printVocabulary(self):
 
-        testWords = ['GLOVE', 'GUN', 'BRONCO', 'BLOOD', 'GUILTY']
+        testWords = self.testWords
 
         
 
@@ -233,7 +234,7 @@ class classNLTKQuery:
 
         for word in testWords:
 
-            count = sum(1 for token in self.tokens if token.upper() == word)
+            count = sum(1 for token in self.tokens if token.upper() == word.upper())
 
             tbl.add_row([word, '{:,}'.format(count)])
 
@@ -336,6 +337,9 @@ if __name__ == '__main__':
     
 
     if result == "Success":
+
+        keywordInput = input("Enter keywords to search for (comma-separated): ")
+        oNLTK.testWords = [word.strip() for word in keywordInput.split(",") if word.strip()]
 
         menuSelection = -1
 
