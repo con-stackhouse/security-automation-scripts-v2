@@ -24,18 +24,20 @@ Requirements:
     - prettytable: pip install prettytable
 
 Output:
-    - rainbow.db: pickled dictionary mapping MD5 hash to password
+    - rainbow.db: JSON dictionary mapping MD5 hash to password
     - Console table showing the first and last 5 entries of the
       reloaded table
 
 Note:
     Educational demonstration only. The character set and password
     lengths are intentionally small; this is not a production-scale
-    rainbow table.
+    rainbow table. Data is persisted as JSON rather than a pickle
+    file to avoid the arbitrary-code-execution risk associated with
+    unpickling data, even from a locally, self-generated file.
 '''
 import itertools
 import hashlib
-import pickle
+import json
 from prettytable import PrettyTable
 
 rainbowTable = {}
@@ -47,26 +49,26 @@ for variations in range(4,8):
         md5Hash = hashlib.md5()
         for eachChr in pwTuple:
             pw = pw+"".join(eachChr)
-        pw = bytes(pw, 'ascii')
-        md5Hash.update(pw)
+        pwBytes = bytes(pw, 'ascii')
+        md5Hash.update(pwBytes)
         md5Digest = md5Hash.hexdigest()
         rainbowTable[md5Digest] = pw
 
 print("Rainbow Size: ", len(rainbowTable), "\n")
 
-# Open the destination File (write binary) serialize rainbowTable
-pickleFileWrite = open('rainbow.db', 'wb')
-pickle.dump(rainbowTable, pickleFileWrite)
-pickleFileWrite.close()
+# Open the destination file (write text) and serialize rainbowTable as JSON
+jsonFileWrite = open('rainbow.db', 'w')
+json.dump(rainbowTable, jsonFileWrite)
+jsonFileWrite.close()
 
 
-# Open the pickle file (read binary)
-pickleFileRead = open('rainbow.db', 'rb')
+# Open the JSON file (read text)
+jsonFileRead = open('rainbow.db', 'r')
 
-# LOAD the serialized data 
-print("\nLoading The Pickled Rainbow Table\n")
-retrievedRainbowTable = pickle.load(pickleFileRead)
-pickleFileRead.close()
+# LOAD the serialized data
+print("\nLoading The Rainbow Table\n")
+retrievedRainbowTable = json.load(jsonFileRead)
+jsonFileRead.close()
 
 table = PrettyTable(["MD5 HASH VALUE", "PASSWORD"])
 
