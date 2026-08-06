@@ -1,5 +1,5 @@
 '''
-WK-3 STARTER SCRIPT
+File Hash Analyzer
 '''
 
 # Python Standard Libaries

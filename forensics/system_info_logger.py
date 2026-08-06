@@ -132,6 +132,6 @@ def main():
 
 if __name__ == '__main__':
     
-    print("\n\nWeek-6 Logging Starter Script - Connor \n")
+    print("\n\nSystem Information Forensic Logger\n")
     main()
     print("\nScript End")

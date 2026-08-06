@@ -15,7 +15,7 @@ Usage:
 
 import re
 
-print("Final Script")
+print("Memory Forensics Analyzer")
 
 # Word token pattern: contiguous letters/apostrophes
 WORDS_PATTERN = re.compile(rb"[A-Za-z']+")

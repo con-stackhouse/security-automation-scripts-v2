@@ -1,5 +1,5 @@
 '''
-Week 5 solution
+Rainbow Table Generator
 '''
 import itertools
 import hashlib
