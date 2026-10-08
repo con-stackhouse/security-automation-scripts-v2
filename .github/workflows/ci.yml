@@ -25,12 +25,9 @@ jobs:
       - name: Install ruff
         run: pip install ruff
 
-      # Pre-existing style/robustness findings are expected until the
-      # repo-wide formatting pass lands; non-blocking for now so this
-      # doesn't fail CI on unrelated commits.
+      # Rule set lives in ruff.toml. Hard gate: new lint findings fail the build.
       - name: Run ruff check
         run: ruff check .
-        continue-on-error: true
 
   sast:
     name: SAST (bandit)
@@ -47,14 +44,12 @@ jobs:
       - name: Install bandit
         run: pip install bandit
 
-      # Currently reports 2 known, intentional findings: MD5 use in
-      # cryptography/rainbow_table_generator.py (rainbow table demo) and
-      # network/tcp_server.py (checksum demo, documented in its docstring).
-      # Non-blocking for now; a follow-up commit can add justified
-      # `# nosec` annotations so this becomes a hard gate.
+      # Hard gate. The two intentional MD5 uses (rainbow-table demo and the
+      # tcp_server checksum demo) are declared with usedforsecurity=False, so
+      # any new weak-crypto or other finding fails the build. Tests are
+      # excluded because pytest's plain asserts trip B101 by design.
       - name: Run bandit
-        run: bandit -r . -x ./.git
-        continue-on-error: true
+        run: bandit -r . -x ./.git,./tests
 
   dependency-audit:
     name: Dependency Audit (pip-audit)
@@ -71,7 +66,27 @@ jobs:
       - name: Install pip-audit
         run: pip install pip-audit
 
-      # Currently clean - kept as a hard gate so a newly introduced
-      # known-vulnerable dependency actually fails the build.
+      # Hard gate so a newly introduced known-vulnerable dependency fails the build.
+      # Exceptions are limited to advisory IDs in SECURITY.md's accepted risk
+      # register, each with an exposure analysis, owner, and review date.
+      # PYSEC-2026-3740: nltk model-artifact APIs not used here; review by 2027-01-07.
       - name: Audit requirements.txt for known vulnerabilities
-        run: pip-audit -r requirements.txt
+        run: pip-audit -r requirements.txt --ignore-vuln PYSEC-2026-3740
+
+  test:
+    name: Tests (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run pytest
+        run: pytest -q

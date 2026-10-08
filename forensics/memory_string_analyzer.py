@@ -27,9 +27,10 @@ Output:
     Top 50 most frequent text strings found in memory
 """
 
-import re
 import os
+import re
 import sys
+
 from prettytable import PrettyTable
 
 # File Chunk Size

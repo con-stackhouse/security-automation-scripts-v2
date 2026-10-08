@@ -44,14 +44,14 @@ Note:
 """
 
 import argparse
-import os
-import re
-import logging
-import platform
-import socket
-import uuid
 import hashlib
+import logging
+import os
+import platform
+import re
+import socket
 import time
+import uuid
 
 import psutil
 
@@ -65,7 +65,7 @@ def getSystemInfo():
         info["    architecture"] = platform.machine()
         info["    hostname"] = socket.gethostname()
         info["    ip-address"] = socket.gethostbyname(socket.gethostname())
-        info["    mac-address"] = ":".join(re.findall("..", "%012x" % uuid.getnode()))
+        info["    mac-address"] = ":".join(re.findall("..", f"{uuid.getnode():012x}"))
         info["    processor"] = platform.processor()
         info["    ram"] = (
             str(round(psutil.virtual_memory().total / (1024.0**3))) + " GB"

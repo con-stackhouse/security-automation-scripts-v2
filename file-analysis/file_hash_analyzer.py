@@ -10,9 +10,9 @@ Usage:
 # Python Standard Libaries
 import argparse
 import csv
+import hashlib
 import json
 import os
-import hashlib
 import time
 
 # Python 3rd Party Libraries

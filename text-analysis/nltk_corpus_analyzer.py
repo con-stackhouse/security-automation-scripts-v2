@@ -41,11 +41,10 @@ Example Use Case:
 
 import os
 import sys
-import logging
-import nltk
-from nltk.corpus import PlaintextCorpusReader
-from nltk.corpus import stopwords
 from time import sleep
+
+import nltk
+from nltk.corpus import PlaintextCorpusReader, stopwords
 from prettytable import PrettyTable
 
 
@@ -107,7 +106,7 @@ class classNLTKQuery:
 
             self.TextCorpus = nltk.Text(self.tokens)
 
-        except:
+        except Exception:
             return "Corpus Creation Failed"
 
         self.ActiveTextCorpus = True
@@ -116,11 +115,11 @@ class classNLTKQuery:
 
     def printCorpusLength(self):
 
-        print("\n\nCorpus Text Length: ", "{:,}".format(len(self.rawText)))
+        print("\n\nCorpus Text Length: ", f"{len(self.rawText):,}")
 
     def printTokensFound(self):
 
-        print("\n\nTokens Found: ", "{:,}".format(len(self.tokens)))
+        print("\n\nTokens Found: ", f"{len(self.tokens):,}")
 
     def printVocabSize(self):
 
@@ -128,7 +127,7 @@ class classNLTKQuery:
 
         vocab = set(self.tokens)
 
-        print("Vocabulary Size: ", "{:,}".format(len(vocab)))
+        print("Vocabulary Size: ", f"{len(vocab):,}")
 
     def searchWordOccurrence(self):
 
@@ -145,7 +144,7 @@ class classNLTKQuery:
                 "'"
                 + word
                 + "' appears "
-                + "{:,}".format(count)
+                + f"{count:,}"
                 + " times in the corpus"
             )
 
@@ -189,10 +188,10 @@ class classNLTKQuery:
                     "First occurrence of '"
                     + word
                     + "' is at position: "
-                    + "{:,}".format(indices[0])
+                    + f"{indices[0]:,}"
                 )
 
-                print("Word appears at " + "{:,}".format(len(indices)) + " positions")
+                print("Word appears at " + f"{len(indices):,}" + " positions")
 
             else:
                 print("'" + word + "' not found in corpus")
@@ -214,7 +213,7 @@ class classNLTKQuery:
         for word in testWords:
             count = sum(1 for token in self.tokens if token.upper() == word.upper())
 
-            tbl.add_row([word, "{:,}".format(count)])
+            tbl.add_row([word, f"{count:,}"])
 
         print(tbl)
 
@@ -266,7 +265,7 @@ def getUserSelection():
 
             continue
 
-        if not menuSelection in range(0, 9):
+        if menuSelection not in range(0, 9):
             print("Invalid input. Enter a value between 0-8.")
 
             continue

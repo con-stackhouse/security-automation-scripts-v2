@@ -33,9 +33,7 @@ Output:
 
 Security Note:
     Only use on networks you own or have explicit permission to monitor.
-"""
 
-"""
 BLACK HAT PYTHON
 SNIFFER EXPERIMENT WITH MODIFICATIONS
 
@@ -70,8 +68,8 @@ Character  Byte order              Size        Alignment
 !          network (= big-endian)  standard    none
 """
 
-import socket
 import ipaddress
+import socket
 import struct
 
 from prettytable import PrettyTable
