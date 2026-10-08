@@ -1,4 +1,3 @@
-from __future__ import print_function
 
 """
 File Hash Duplicate Detector
@@ -38,8 +37,9 @@ Note:
 """
 
 import argparse
-import os
 import hashlib
+import os
+
 from prettytable import PrettyTable
 
 parser = argparse.ArgumentParser(

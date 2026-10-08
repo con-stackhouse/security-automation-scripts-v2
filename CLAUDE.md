@@ -30,16 +30,18 @@ python3 <category>/<script>.py
   prompting for it:
   - `forensics/memory_forensics_analyzer.py`, `forensics/memory_string_analyzer.py` → `mem.raw`
   - `forensics/firewall_log_parser.py` → `redhat.txt`
-- `web-security/web_scraper.py` has the target `URL` hardcoded as a module-level constant — edit the
-  script to change target instead of expecting a prompt or argument.
+- `web-security/web_scraper.py` takes the target via `--url` (defaults to the `DEFAULT_URL` constant).
+- Scripts with argparse flags: `file_hash_analyzer.py`, `file_hash_duplicate_detector.py`,
+  `firewall_log_parser.py`, `system_info_logger.py`, `web_scraper.py` (`--help` lists them).
 - `network/packet_sniffer.py` requires root/admin privileges (raw sockets) and uses Windows-specific
   socket options (`SIO_RCVALL`/`RCVALL_ON`) — it will not run unmodified on macOS/Linux.
 - `network/tcp_server.py` must be started before `network/tcp_client.py`; they communicate over
   `localhost:5555`.
-- GitHub Actions CI (`.github/workflows/ci.yml`) runs ruff, bandit, and pip-audit on every push/PR.
-  `pytest` (see `tests/`) covers the chunk-boundary logic in the memory-forensics scripts; there is no
-  broader test suite or linter config beyond that, so validate other changes by running the affected
-  script directly.
+- GitHub Actions CI (`.github/workflows/ci.yml`) runs ruff (rules in `ruff.toml`), bandit (excluding
+  `tests/`), pip-audit, and pytest on every push/PR. All four are hard gates, so run
+  `ruff check . && bandit -r . -x ./.git,./tests && pytest -q` before committing. The two intentional
+  MD5 uses declare `usedforsecurity=False`; keep that pattern rather than adding `# nosec`. pytest only
+  covers the chunk-boundary logic, so validate other changes by running the affected script directly.
 
 ## Patterns shared across scripts
 

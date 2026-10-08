@@ -36,9 +36,10 @@ Note:
     unpickling data, even from a locally, self-generated file.
 """
 
-import itertools
 import hashlib
+import itertools
 import json
+
 from prettytable import PrettyTable
 
 rainbowTable = {}
@@ -47,7 +48,7 @@ print("Create Simple Rainbow Table")
 for variations in range(4, 8):
     for pwTuple in itertools.product("abc123&", repeat=variations):
         pw = ""
-        md5Hash = hashlib.md5()
+        md5Hash = hashlib.md5(usedforsecurity=False)  # cracking demo, not protecting anything
         for eachChr in pwTuple:
             pw = pw + "".join(eachChr)
         pwBytes = bytes(pw, "ascii")
@@ -64,7 +65,7 @@ jsonFileWrite.close()
 
 
 # Open the JSON file (read text)
-jsonFileRead = open("rainbow.db", "r")
+jsonFileRead = open("rainbow.db")
 
 # LOAD the serialized data
 print("\nLoading The Rainbow Table\n")

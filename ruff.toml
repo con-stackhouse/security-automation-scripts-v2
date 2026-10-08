@@ -1,0 +1,8 @@
+# Lint rules enforced in CI. Scripts are standalone coursework tools, so a few
+# rules that fight that design are left off on purpose (see CLAUDE.md):
+#  - BLE001 / blind except: top-level broad try/except + sys.exit is the house style
+#  - LOG015 / root logger: single-file scripts log to the root logger by design
+target-version = "py312"
+
+[lint]
+select = ["E4", "E7", "E9", "F", "I", "UP"]

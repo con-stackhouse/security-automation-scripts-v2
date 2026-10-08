@@ -45,7 +45,7 @@ class FileProcessor:
                 self.fileCreatedTime = time.ctime(stats.st_ctime)
                 self.fileModifiedTime = time.ctime(stats.st_mtime)
                 self.fileAccessTime = time.ctime(stats.st_atime)
-                self.fileMode = "{:016b}".format(stats.st_mode)
+                self.fileMode = f"{stats.st_mode:016b}"
                 self.fileUID = stats.st_uid
                 self.fileHeader = ""
 
@@ -75,7 +75,7 @@ class FileProcessor:
         """Print the metadata and print the hex representation of the header"""
         print("\nFile Metadata:")
         print("File Path:               ", self.filePath)
-        print("File Size:               ", "{:,}".format(self.fileSize), "Bytes")
+        print("File Size:               ", f"{self.fileSize:,}", "Bytes")
         print("File Created Time:       ", self.fileCreatedTime)
         print("File Modified Time:      ", self.fileModifiedTime)
         print("File Access Time:        ", self.fileAccessTime)

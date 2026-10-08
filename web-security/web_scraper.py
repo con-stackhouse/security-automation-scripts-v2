@@ -35,11 +35,12 @@ Note:
 
 import argparse
 import os
+from io import BytesIO
+from urllib.parse import urljoin
+
 import requests  # Python library for url requests
 from bs4 import BeautifulSoup  # 3rd party BeautifulSoup library
 from PIL import Image  # 3rd party Python Image library
-from io import BytesIO
-from urllib.parse import urljoin
 
 DEFAULT_URL = "https://casl.website"
 

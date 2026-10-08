@@ -1,6 +1,6 @@
+import hashlib
 import socket
 import sys
-import hashlib
 
 """
 
@@ -69,7 +69,7 @@ try:
 
         print(buffer)
 
-        md5Obj = hashlib.md5()
+        md5Obj = hashlib.md5(usedforsecurity=False)  # integrity checksum demo, not authentication
 
         md5Obj.update(buffer)
 

@@ -32,14 +32,11 @@ Output:
 
 """
 
-import sys
 
 import os
 
 from PIL import Image
-
 from prettytable import PrettyTable
-
 
 print("\nScripting Solution\n")
 
@@ -66,7 +63,7 @@ while True:
 
                     fileSize = os.path.getsize(fullPath)
 
-                    formattedFileSize = "{:,}".format(fileSize)
+                    formattedFileSize = f"{fileSize:,}"
 
                     try:
                         with Image.open(fullPath) as im:
@@ -83,7 +80,7 @@ while True:
                                 ]
                             )
 
-                    except Exception as err:
+                    except Exception:
                         table.add_row(
                             [
                                 "NO",

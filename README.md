@@ -1,222 +1,91 @@
 # Security Automation & Forensics Tools
 
-Python security and digital forensics scripts developed during University of Arizona Cyber Operations Engineering program (B.A.S., 3.89 GPA).
+[![CI](https://github.com/con-stackhouse/security-automation-scripts-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/con-stackhouse/security-automation-scripts-v2/actions/workflows/ci.yml)
 
-## 🛡️ Security Domains Covered
+Python tools for digital forensics, file integrity, log analysis, and network inspection, maintained
+behind a CI pipeline where linting, static security analysis, dependency auditing, and tests all have to
+pass before a change goes in.
 
-- **Digital Forensics** - Memory analysis, file system forensics, evidence collection
-- **Network Security** - Packet capture and socket programming
-- **Cryptography** - Password security and hash cracking concepts
-- **Web Security** - Web scraping and reconnaissance
-- **File Analysis** - Integrity verification and metadata extraction
-- **Text Analysis** - Natural language processing and corpus analysis
+## Where to look first
 
----
+**1. Correct pattern matching across chunk boundaries in memory dumps**
+`forensics/memory_forensics_analyzer.py`, `forensics/memory_string_analyzer.py`,
+`forensics/email_url_extractor.py`
 
-## 📁 Scripts by Category
+Memory dumps are too large to load at once, so these tools stream them in fixed-size chunks. The
+original design could silently miscount any match that straddled two chunks, either missing it or
+recording a truncated fragment as a different, wrong match. The fix holds back a trailing margin of
+each chunk and only counts a match once it can no longer grow, so every match is counted exactly once.
+`tests/test_extraction.py` runs the same boundary cases against all three implementations, so a fix
+to one script can't quietly miss the others.
 
-### Digital Forensics
+**2. Security gates in CI** ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
 
-#### 1. Memory Forensics Analyzer
-**File:** `forensics/memory_forensics_analyzer.py`
-- **Purpose:** Analyze memory dumps for forensic investigation
-- **Techniques:** Chunked file processing, regex pattern matching, keyword extraction
-- **Use Case:** Incident response, malware analysis, memory forensics
-- **Skills:** File I/O optimization, memory-efficient processing, forensic analysis
+| Gate | Tool | What fails the build |
+| --- | --- | --- |
+| Lint | ruff | Any finding under the rule set in `ruff.toml` |
+| SAST | bandit | Any new security finding |
+| Dependencies | pip-audit | A dependency with a known CVE |
+| Tests | pytest | Any failing test |
 
-#### 2. File Metadata Processor
-**File:** `forensics/file_metadata_processor.py`
-- **Purpose:** Object-oriented file forensics with comprehensive metadata extraction
-- **Techniques:** OOP design, file system analysis, header extraction
-- **Use Case:** Digital evidence collection, file system forensics
-- **Skills:** Python classes, error handling, forensic documentation
+Two scripts use MD5 on purpose (a rainbow-table demo and a checksum demo). Rather than suppressing
+the scanner, those calls declare `usedforsecurity=False`, which documents the intent in the code and
+keeps bandit a hard gate for everything else.
 
-#### 3. Email & URL Extractor
-**File:** `forensics/email_url_extractor.py`
-- **Purpose:** Extract email addresses and URLs from memory dumps
-- **Techniques:** Regular expressions, pattern matching, frequency analysis
-- **Use Case:** Investigation of communication artifacts, data exfiltration detection
-- **Skills:** Regex mastery, chunked processing, data extraction
+**3. Evidence integrity**
+File catalogs are hashed with SHA-256 in streamed 64 KB blocks, so large evidence files never have to
+fit in memory. `system_info_logger.py` also writes a SHA-256 hash of its finished log next to the log
+itself, so later tampering is detectable.
 
-#### 4. Memory String Analyzer
-**File:** `forensics/memory_string_analyzer.py`
-- **Purpose:** Extract and analyze text strings from binary memory dumps
-- **Techniques:** String pattern matching, frequency analysis
-- **Use Case:** Memory forensics, artifact recovery
-- **Skills:** Binary file processing, statistical analysis
+## Tools
 
-#### 5. File Hash Duplicate Detector
-**File:** `forensics/file_hash_duplicate_detector.py`
-- **Purpose:** Identify duplicate files using MD5 hashing
-- **Techniques:** Hash-based deduplication, recursive scanning
-- **Use Case:** Storage optimization, forensic duplicate detection
-- **Skills:** Hash algorithms, file system traversal
+| Area | Script | What it does |
+| --- | --- | --- |
+| Forensics | `forensics/memory_forensics_analyzer.py` | Keyword and word-frequency extraction from memory dumps |
+| | `forensics/memory_string_analyzer.py` | Recovers readable strings from binary dumps and ranks them by frequency |
+| | `forensics/email_url_extractor.py` | Pulls email addresses and URLs out of memory dumps |
+| | `forensics/file_metadata_processor.py` | Extracts file timestamps, permissions, ownership, and header bytes |
+| | `forensics/file_hash_duplicate_detector.py` | Finds duplicate files across a directory tree by hash |
+| | `forensics/system_info_logger.py` | System profile plus hashed file catalog for evidence collection |
+| | `forensics/firewall_log_parser.py` | Parses firewall logs and flags known worm signatures; exports JSON/CSV |
+| File analysis | `file-analysis/file_hash_analyzer.py` | SHA-256 integrity baseline of a directory; exports JSON/CSV |
+| | `file-analysis/image_scanner.py` | Finds images in a directory tree and reports format and dimensions |
+| Network | `network/packet_sniffer.py` | Raw-socket capture with IP/protocol breakdown (Windows only, requires admin) |
+| | `network/tcp_server.py`, `network/tcp_client.py` | Client/server pair that verifies message integrity with a checksum |
+| Web | `web-security/web_scraper.py` | Link and image enumeration for a single authorized target |
+| Crypto | `cryptography/rainbow_table_generator.py` | Shows why unsalted hashes are crackable with precomputed tables |
+| Text | `text-analysis/nltk_corpus_analyzer.py` | Word frequency, concordance, and vocabulary analysis of document sets |
 
-#### 6. System Information Logger
-**File:** `forensics/system_info_logger.py`
-- **Purpose:** Comprehensive forensic system profiling and file cataloging
-- **Techniques:** System metadata collection, SHA-256 hashing, forensic logging
-- **Use Case:** Incident response, evidence collection, system baseline
-- **Skills:** System profiling, forensic documentation, chain-of-custody tamper-evidence (writes a SHA-256 hash of the completed log alongside it)
+## Running
 
-#### 7. Firewall Log Parser
-**File:** `forensics/firewall_log_parser.py`
-- **Purpose:** Parse security logs to detect malware signatures
-- **Techniques:** Log parsing, pattern matching, threat detection
-- **Use Case:** Security monitoring, malware detection, log analysis
-- **Skills:** Log analysis, threat intelligence, pattern recognition
----
+```bash
+pip install -r requirements.txt
+python3 forensics/firewall_log_parser.py --json findings.json
+python3 file-analysis/file_hash_analyzer.py --path ./evidence --csv baseline.csv
+```
 
-### File Analysis
+Scripts are standalone, with no shared package. Several accept flags (`--help` lists them), and the
+rest prompt for a path when run. The memory tools read `mem.raw` from the current directory, and the
+firewall parser reads `redhat.txt`.
 
-#### 8. File Hash Analyzer
-**File:** `file-analysis/file_hash_analyzer.py`
-- **Purpose:** Generate forensic catalog of files with SHA-256 integrity hashes
-- **Techniques:** Recursive directory walking, cryptographic hashing, timeline analysis
-- **Use Case:** File integrity monitoring, baseline security audits, chain of custody
-- **Skills:** Cryptographic hashing, file system operations, forensic timelines
+To run the same checks as CI:
 
-#### 9. Image Scanner
-**File:** `file-analysis/image_scanner.py`
-- **Purpose:** Detect and analyze digital images in directories
-- **Techniques:** Image format detection, metadata extraction using PIL
-- **Use Case:** Digital evidence discovery, image forensics
-- **Skills:** Image processing, file type detection, data presentation
+```bash
+pip install -r requirements-dev.txt ruff bandit pip-audit
+ruff check . && bandit -r . -x ./.git,./tests && pip-audit -r requirements.txt && pytest -q
+```
 
----
+## About
 
-### Network Security
+Built by **Connor Stackhouse**, Medical Device Security Analyst at HonorHealth, working on
+vulnerability management for clinical devices. Before moving into security I spent three and a half
+years as a CT technologist, so I know the clinical side of the devices I now help secure.
+B.A.S. in Cyber Operations Engineering, University of Arizona (2025). CompTIA Security+.
 
-#### 10. Packet Sniffer
-**File:** `network/packet_sniffer.py`
-- **Purpose:** Capture and analyze network traffic
-- **Techniques:** Raw socket programming, packet header parsing, protocol identification
-- **Use Case:** Network forensics, traffic analysis, intrusion detection
-- **Skills:** Socket programming, binary data structures, network protocols (TCP/UDP/ICMP)
-- **Note:** Requires administrator/root privileges
+[LinkedIn](https://www.linkedin.com/in/connor-stackhouse-91570986/) ·
+[GitHub](https://github.com/con-stackhouse) · con.stackhouse@gmail.com
 
-#### 11. TCP Client
-**File:** `network/tcp_client.py`
-- **Purpose:** Client-side socket programming with message transmission
-- **Techniques:** TCP socket communication, hash verification
-- **Use Case:** Network protocol understanding, client-server architecture
-- **Skills:** Socket programming, network protocols
+## Authorized use only
 
-#### 12. TCP Server
-**File:** `network/tcp_server.py`
-- **Purpose:** Server-side socket programming with MD5 response
-- **Techniques:** TCP socket listening, hash-based confirmation
-- **Use Case:** Server architecture, message integrity verification
-- **Skills:** Server programming, hash authentication concepts
-
----
-
-### Text Analysis
-
-#### 13. NLTK Corpus Analyzer
-**File:** `text-analysis/nltk_corpus_analyzer.py`
-- **Purpose:** Natural language processing for text corpus analysis
-- **Techniques:** NLTK, word frequency, concordance, vocabulary analysis
-- **Use Case:** Document analysis, keyword extraction, communication patterns
-- **Skills:** NLP, text mining, statistical analysis
-
----
-
-### Web Security
-
-#### 14. Web Scraper & Reconnaissance Tool
-**File:** `web-security/web_scraper.py`
-- **Purpose:** Extract links and images from websites for security assessment
-- **Techniques:** BeautifulSoup parsing, HTTP requests, web crawling
-- **Use Case:** Reconnaissance, OSINT, web application analysis
-- **Skills:** Web scraping, HTTP protocols, HTML parsing
-
----
-
-### Cryptography
-
-#### 15. Rainbow Table Generator
-**File:** `cryptography/rainbow_table_generator.py`
-- **Purpose:** Educational demonstration of password cracking via precomputed hashes
-- **Techniques:** MD5 hashing, combinatorics, data serialization
-- **Use Case:** Password security education, understanding hash attacks
-- **Skills:** Cryptographic concepts, algorithm optimization, offensive security principles
-
-## 🔧 Technologies & Libraries Used
-
-- **Python 3.x**
-- **Standard Libraries:** os, socket, struct, re, hashlib, pickle, time, platform, uuid, logging
-- **Third-Party:**
-  - PrettyTable (data presentation)
-  - Pillow/PIL (image processing)
-  - BeautifulSoup (web parsing)
-  - Requests (HTTP)
-  - psutil (system information)
-  - NLTK (natural language processing)
-
-## 📚 Security Concepts Demonstrated
-
-- Digital forensics methodology
-- Memory analysis techniques
-- File integrity verification
-- Network packet analysis
-- Socket programming (client-server architecture)
-- Cryptographic hash functions
-- Regular expression pattern matching
-- Object-oriented security tool design
-- Web reconnaissance techniques
-- Chain of custody procedures
-- Natural language processing for security
-
-## 🎓 Education
-
-**Bachelor of Applied Science - Cyber Operations Engineering**  
-University of Arizona (3.89 GPA)  
-Graduation: December 2025
-
-**Relevant Coursework:**
-- Digital Forensics
-- Security Programming
-- Network Security
-- Penetration Testing
-- Incident Response
-- Malware Analysis
-
-## 🏆 Certifications
-
-- ARRT - Radiologic Technology (R)
-- ARRT - Computed Tomography (CT)
-
-
-## 💼 Professional Experience
-
-**Medical Device Security Analyst (Mitigation Specialist)** - HonorHealth (December 2025-Present)
-- Medical device vulnerability management using ORDR platform
-- ServiceNow security workflow automation
-- Healthcare compliance and risk assessment
-- Coordination with clinical teams for security patch deployment
-
-**CT Technologist** - HonorHealth (July 2022-December 2025)
-- HIPAA-compliant medical systems management
-- RIS/PACS security and access control
-- Healthcare IT infrastructure operations
-- User access management and security coordination
-
-## 🔗 Additional Projects
-
-- Web Application Security Assessment (OWASP ZAP) - Penetration testing project
-
-## ⚠️ Legal Disclaimer
-
-These scripts are for educational and authorized security testing purposes only. Always obtain proper authorization before using security tools on systems you do not own or have explicit permission to test.
-
-## 📧 Contact
-
-- LinkedIn: https://www.linkedin.com/in/connor-stackhouse-91570986/
-- Email: con.stackhouse@gmail.com
-- GitHub: https://github.com/con-stackhouse
-
----
-
-*Building secure systems through education and hands-on experience.*
-
+These tools are for education and for systems you own or have written permission to test. Packet
+capture, web enumeration, and hash cracking against systems without authorization may be illegal.
