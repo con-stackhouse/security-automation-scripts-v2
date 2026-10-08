@@ -25,7 +25,7 @@ to one script can't quietly miss the others.
 | --- | --- | --- |
 | Lint | ruff | Any finding under the rule set in `ruff.toml` |
 | SAST | bandit | Any new security finding |
-| Dependencies | pip-audit | A dependency with a known CVE |
+| Dependencies | pip-audit | A dependency with a known CVE, unless it has a documented decision in [`SECURITY.md`](SECURITY.md) |
 | Tests | pytest | Any failing test |
 
 Two scripts use MD5 on purpose (a rainbow-table demo and a checksum demo). Rather than suppressing
@@ -72,7 +72,7 @@ To run the same checks as CI:
 
 ```bash
 pip install -r requirements-dev.txt ruff bandit pip-audit
-ruff check . && bandit -r . -x ./.git,./tests && pip-audit -r requirements.txt && pytest -q
+ruff check . && bandit -r . -x ./.git,./tests && pip-audit -r requirements.txt --ignore-vuln PYSEC-2026-3740 && pytest -q
 ```
 
 ## About

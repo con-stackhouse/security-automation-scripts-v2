@@ -67,8 +67,11 @@ jobs:
         run: pip install pip-audit
 
       # Hard gate so a newly introduced known-vulnerable dependency fails the build.
+      # Exceptions are limited to advisory IDs in SECURITY.md's accepted risk
+      # register, each with an exposure analysis, owner, and review date.
+      # PYSEC-2026-3740: nltk model-artifact APIs not used here; review by 2027-01-07.
       - name: Audit requirements.txt for known vulnerabilities
-        run: pip-audit -r requirements.txt
+        run: pip-audit -r requirements.txt --ignore-vuln PYSEC-2026-3740
 
   test:
     name: Tests (pytest)
